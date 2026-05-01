@@ -51,6 +51,12 @@ export default function CalendarPage() {
     return newEvents;
   }, [sessions, tags]);
 
+  const scrollToTime = useMemo(() => {
+    const now = new Date();
+    // Scroll to 1 hour before current time to provide some context
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), Math.max(0, now.getHours() - 1));
+  }, []);
+
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
     return {
       style: {
@@ -106,6 +112,7 @@ export default function CalendarPage() {
           }}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleSelectEvent}
+          scrollToTime={scrollToTime}
           popup
           selectable={false}
           step={30}

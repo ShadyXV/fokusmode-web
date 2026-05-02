@@ -4,7 +4,6 @@ import { api } from "../../convex/_generated/api";
 import { useTimerContext } from "@/context/TimerContext";
 import { useTimerSound } from "@/hooks/useTimerSound";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -14,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Play, Square, Zap, Coffee } from "lucide-react";
+import { Play, Square, Zap, Coffee, Minus, Plus } from "lucide-react";
+import { useRef } from "react";
 
 const PRESETS = [
   { label: "5m", seconds: 5 * 60 },
@@ -59,8 +59,10 @@ export default function FocusPage() {
 
   const [selectedDuration, setSelectedDuration] = useState<number>(25 * 60);
   const [breakDuration, setBreakDuration] = useState<number>(5 * 60);
-  const [customMinutes, setCustomMinutes] = useState("");
   const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  const dragStartX = useRef(0);
+  const dragStartVal = useRef(0);
 
   // Seed default tag on mount
   useEffect(() => {
@@ -106,16 +108,6 @@ export default function FocusPage() {
   const handlePreset = (seconds: number, label: string) => {
     setSelectedDuration(seconds);
     setActivePreset(label);
-    setCustomMinutes("");
-  };
-
-  const handleCustomInput = (val: string) => {
-    setCustomMinutes(val);
-    const num = parseInt(val, 10);
-    if (num > 0) {
-      setSelectedDuration(num * 60);
-      setActivePreset(null);
-    }
   };
 
   // SVG ring calculations
@@ -219,16 +211,49 @@ export default function FocusPage() {
               {p.label}
             </Button>
           ))}
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              placeholder="min"
-              value={customMinutes}
-              onChange={(e) => handleCustomInput(e.target.value)}
-              className="w-20 rounded-full text-center h-9"
-              min={1}
-              max={180}
-            />
+          <div className="flex items-center bg-background/50 border border-white/10 rounded-full h-9 px-1 shadow-inner group">
+            <button
+              onClick={() => {
+                setSelectedDuration(Math.max(60, selectedDuration - 5 * 60));
+                setActivePreset(null);
+              }}
+              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              title="Decrease 5m"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <div 
+              className="w-12 text-center text-sm font-medium cursor-ew-resize select-none text-foreground"
+              title="Drag left/right to adjust"
+              onPointerDown={(e) => {
+                dragStartX.current = e.clientX;
+                dragStartVal.current = selectedDuration;
+                (e.target as HTMLElement).setPointerCapture(e.pointerId);
+              }}
+              onPointerMove={(e) => {
+                if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+                const deltaX = e.clientX - dragStartX.current;
+                const deltaMins = Math.round(deltaX / 3); 
+                const newSecs = Math.max(60, Math.min(180 * 60, dragStartVal.current + deltaMins * 60));
+                setSelectedDuration(newSecs);
+                setActivePreset(null);
+              }}
+              onPointerUp={(e) => {
+                (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+              }}
+            >
+              {Math.round(selectedDuration / 60)}m
+            </div>
+            <button
+              onClick={() => {
+                setSelectedDuration(Math.min(180 * 60, selectedDuration + 5 * 60));
+                setActivePreset(null);
+              }}
+              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              title="Increase 5m"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}

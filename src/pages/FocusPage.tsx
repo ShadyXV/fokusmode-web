@@ -21,7 +21,7 @@ const PRESETS = [
   { label: "15m", seconds: 15 * 60 },
   { label: "30m", seconds: 30 * 60 },
   { label: "45m", seconds: 45 * 60 },
-  { label: "1h", seconds: 60 * 60 },
+  { label: "60m", seconds: 60 * 60 },
   { label: "90m", seconds: 90 * 60 },
 ];
 
@@ -60,6 +60,8 @@ export default function FocusPage() {
   const [selectedDuration, setSelectedDuration] = useState<number>(25 * 60);
   const [breakDuration, setBreakDuration] = useState<number>(5 * 60);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragDeltaX, setDragDeltaX] = useState(0);
 
   const dragStartX = useRef(0);
   const dragStartVal = useRef(0);
@@ -199,7 +201,7 @@ export default function FocusPage() {
 
       {/* Preset buttons */}
       {!timer.isRunning && timer.elapsed === 0 && (
-        <div className="flex flex-wrap gap-2 justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-2xl">
           {PRESETS.map((p) => (
             <Button
               key={p.label}
@@ -211,45 +213,72 @@ export default function FocusPage() {
               {p.label}
             </Button>
           ))}
-          <div className="flex items-center bg-background/50 border border-white/10 rounded-full h-9 px-1 shadow-inner group">
+          <div
+            className={`flex items-center bg-background/50 border border-white/10 rounded-full h-9 px-1 shadow-inner group cursor-ew-resize select-none`}
+            style={{
+              transform: isDragging 
+                ? `scaleX(${1 + Math.min(0.12, Math.abs(dragDeltaX) / 800)})` 
+                : "scaleX(1)",
+              transformOrigin: dragDeltaX > 0 ? "left" : "right",
+              transition: isDragging 
+                ? "transform 100ms ease-out" 
+                : "transform 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+            }}
+            title="Drag left/right or click buttons"
+            onPointerDown={(e) => {
+              setIsDragging(true);
+              setDragDeltaX(0);
+              dragStartX.current = e.clientX;
+              dragStartVal.current = selectedDuration;
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+              const deltaX = e.clientX - dragStartX.current;
+              setDragDeltaX(deltaX);
+              
+              if (Math.abs(deltaX) < 5) return; // ignore tiny movements
+
+              const deltaMins = Math.round(deltaX / 3);
+              const newSecs = Math.max(60, Math.min(180 * 60, dragStartVal.current + deltaMins * 60));
+              setSelectedDuration(newSecs);
+              setActivePreset(null);
+            }}
+            onPointerUp={(e) => {
+              setIsDragging(false);
+              setDragDeltaX(0);
+              e.currentTarget.releasePointerCapture(e.pointerId);
+            }}
+            onPointerCancel={() => {
+              setIsDragging(false);
+              setDragDeltaX(0);
+            }}
+          >
             <button
-              onClick={() => {
+              onClick={(e) => {
+                // Only trigger if it wasn't a significant drag
+                const deltaX = Math.abs(e.clientX - dragStartX.current);
+                if (deltaX > 10) return;
                 setSelectedDuration(Math.max(60, selectedDuration - 5 * 60));
                 setActivePreset(null);
               }}
-              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
               title="Decrease 5m"
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <div 
-              className="w-12 text-center text-sm font-medium cursor-ew-resize select-none text-foreground"
-              title="Drag left/right to adjust"
-              onPointerDown={(e) => {
-                dragStartX.current = e.clientX;
-                dragStartVal.current = selectedDuration;
-                (e.target as HTMLElement).setPointerCapture(e.pointerId);
-              }}
-              onPointerMove={(e) => {
-                if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-                const deltaX = e.clientX - dragStartX.current;
-                const deltaMins = Math.round(deltaX / 3); 
-                const newSecs = Math.max(60, Math.min(180 * 60, dragStartVal.current + deltaMins * 60));
-                setSelectedDuration(newSecs);
-                setActivePreset(null);
-              }}
-              onPointerUp={(e) => {
-                (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-              }}
-            >
+            <div className="w-12 text-center text-sm font-medium text-foreground">
               {Math.round(selectedDuration / 60)}m
             </div>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                // Only trigger if it wasn't a significant drag
+                const deltaX = Math.abs(e.clientX - dragStartX.current);
+                if (deltaX > 10) return;
                 setSelectedDuration(Math.min(180 * 60, selectedDuration + 5 * 60));
                 setActivePreset(null);
               }}
-              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
               title="Increase 5m"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -296,7 +325,7 @@ export default function FocusPage() {
                 ))}
               </SelectContent>
             </Select>
-            
+
             {timer.isRunning && sessionMode === "break" ? (
               <Button
                 variant="destructive"

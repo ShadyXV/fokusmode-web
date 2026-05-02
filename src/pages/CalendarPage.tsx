@@ -52,10 +52,46 @@ export default function CalendarPage() {
     );
     const breakEvents = breaksToEvents(breaks as any[]);
     
-    const newEvents = [...sessionEvents, ...breakEvents];
-    lastEvents.current = newEvents;
-    return newEvents;
-  }, [sessions, breaks, tags]);
+    const allEvents = [...sessionEvents, ...breakEvents];
+    
+    if (view === "month") {
+      const eventsByDay = new Map<string, CalendarEvent[]>();
+      for (const e of allEvents) {
+        const dayKey = format(e.start, "yyyy-MM-dd");
+        if (!eventsByDay.has(dayKey)) eventsByDay.set(dayKey, []);
+        eventsByDay.get(dayKey)!.push(e);
+      }
+
+      const monthEvents: CalendarEvent[] = [];
+      eventsByDay.forEach((dayEvents, dayKey) => {
+        // sort descending by start time (most recent first)
+        dayEvents.sort((a, b) => b.start.getTime() - a.start.getTime());
+        const mostRecent = dayEvents[0];
+        const others = dayEvents.slice(1);
+
+        monthEvents.push({
+          id: `summary-${dayKey}`,
+          title: "Summary",
+          start: new Date(`${dayKey}T00:00:00`),
+          end: new Date(`${dayKey}T23:59:59`),
+          allDay: true,
+          tagColor: "transparent",
+          tagName: "Summary",
+          status: "completed",
+          plannedDuration: 0,
+          actualDuration: 0,
+          isMonthSummary: true,
+          mostRecent,
+          others,
+        });
+      });
+      lastEvents.current = monthEvents;
+      return monthEvents;
+    }
+
+    lastEvents.current = allEvents;
+    return allEvents;
+  }, [sessions, breaks, tags, view]);
 
   const scrollToTime = useMemo(() => {
     const now = new Date();
@@ -76,30 +112,38 @@ export default function CalendarPage() {
     };
   }, []);
 
-  const handleSelectEvent = useCallback((_event: CalendarEvent) => {
-    // The popover handles display via the custom event wrapper
+  const handleSelectEvent = useCallback((event: CalendarEvent) => {
+    if (event.isMonthSummary) {
+      setCurrentDate(event.start);
+      setView("day");
+    }
   }, []);
 
   // Wrap events in popover
   const EventWrapper = useCallback(
-    ({ event, children }: { event: CalendarEvent; children: React.ReactNode }) => (
-      <SessionDetailPopover event={event}>
-        <div className="cursor-pointer">{children}</div>
-      </SessionDetailPopover>
-    ),
+    ({ event, children }: { event: CalendarEvent; children: React.ReactNode }) => {
+      if (event.isMonthSummary) {
+        return <div className="cursor-pointer h-full relative z-10">{children}</div>;
+      }
+      return (
+        <SessionDetailPopover event={event}>
+          <div className="cursor-pointer">{children}</div>
+        </SessionDetailPopover>
+      );
+    },
     []
   );
 
   return (
-    <div className="p-6 md:p-8 space-y-4">
-      <div>
+    <div className="p-4 md:p-6 flex flex-col h-[calc(100vh-3rem)] md:h-screen max-w-7xl mx-auto">
+      <div className="mb-4">
         <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
         <p className="text-muted-foreground mt-1">
           Visualize your focus sessions over time
         </p>
       </div>
 
-      <div className="h-[calc(100vh-12rem)] relative">
+      <div className="flex-1 relative min-h-[500px]">
         {/* Optional loading state can go here, but calendar is always visible */}
         <BigCalendar<CalendarEvent>
           localizer={localizer}

@@ -28,6 +28,10 @@ export interface CalendarEvent extends Event {
   actualDuration: number;
   tagId?: string;
   isBreak?: boolean;
+  // Month view summary properties
+  isMonthSummary?: boolean;
+  mostRecent?: CalendarEvent;
+  others?: CalendarEvent[];
 }
 
 export interface BreakDoc {

@@ -7,6 +7,7 @@ import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import {
   sessionsToEvents,
+  breaksToEvents,
   type CalendarEvent,
 } from "@/lib/calendarHelpers";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -36,20 +37,25 @@ export default function CalendarPage() {
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   const sessions = useQuery(api.sessions.listByDateRange, bufferedRange);
+  const breaks = useQuery(api.breaks.listByDateRange, bufferedRange);
   const tags = useQuery(api.tags.list);
 
   // Use a ref to keep events visible while loading new ones (prevents blank screen)
   const lastEvents = useRef<CalendarEvent[]>([]);
 
   const events = useMemo(() => {
-    if (!sessions || !tags) return lastEvents.current;
-    const newEvents = sessionsToEvents(
+    if (!sessions || !breaks || !tags) return lastEvents.current;
+    
+    const sessionEvents = sessionsToEvents(
       sessions as any[],
       tags as any[]
     );
+    const breakEvents = breaksToEvents(breaks as any[]);
+    
+    const newEvents = [...sessionEvents, ...breakEvents];
     lastEvents.current = newEvents;
     return newEvents;
-  }, [sessions, tags]);
+  }, [sessions, breaks, tags]);
 
   const scrollToTime = useMemo(() => {
     const now = new Date();

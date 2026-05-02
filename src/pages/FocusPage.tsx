@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
-import { useTimer } from "@/hooks/useTimer";
+import { useTimerContext } from "@/context/TimerContext";
 import { useTimerSound } from "@/hooks/useTimerSound";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { Play, Square, RotateCcw, Zap } from "lucide-react";
+import { Play, Square, Zap, Coffee } from "lucide-react";
 
 const PRESETS = [
   { label: "5m", seconds: 5 * 60 },
@@ -25,6 +23,13 @@ const PRESETS = [
   { label: "45m", seconds: 45 * 60 },
   { label: "1h", seconds: 60 * 60 },
   { label: "90m", seconds: 90 * 60 },
+];
+
+const BREAK_PRESETS = [
+  { label: "5m", seconds: 5 * 60 },
+  { label: "15m", seconds: 15 * 60 },
+  { label: "20m", seconds: 20 * 60 },
+  { label: "30m", seconds: 30 * 60 },
 ];
 
 function formatTime(seconds: number): string {
@@ -38,18 +43,24 @@ function formatTime(seconds: number): string {
 export default function FocusPage() {
   const tags = useQuery(api.tags.list);
   const defaultTag = useQuery(api.tags.getDefault);
-  const createSession = useMutation(api.sessions.create);
   const initSeed = useMutation(api.seed.initialize);
 
-  const timer = useTimer();
-  const { playComplete, playStart, playInterrupt } = useTimerSound();
+  const {
+    timer,
+    sessionMode,
+    setSessionMode,
+    selectedTagId,
+    setSelectedTagId,
+    lastRecorded,
+    handleTimerEnd,
+  } = useTimerContext();
+
+  const { playStart } = useTimerSound();
 
   const [selectedDuration, setSelectedDuration] = useState<number>(25 * 60);
+  const [breakDuration, setBreakDuration] = useState<number>(5 * 60);
   const [customMinutes, setCustomMinutes] = useState("");
-  const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [activePreset, setActivePreset] = useState<string | null>(null);
-  const prevRunningRef = useRef(false);
-  const sessionSavedRef = useRef(false);
 
   // Seed default tag on mount
   useEffect(() => {
@@ -70,65 +81,8 @@ export default function FocusPage() {
     }
   }, [tags, defaultTag, selectedTagId]);
 
-  // Detect timer natural completion
-  useEffect(() => {
-    if (prevRunningRef.current && !timer.isRunning && timer.elapsed >= timer.plannedDuration && timer.plannedDuration > 0 && !sessionSavedRef.current) {
-      handleTimerEnd(true);
-    }
-    prevRunningRef.current = timer.isRunning;
-  }, [timer.isRunning]);
-
-  const handleTimerEnd = useCallback(
-    async (naturalCompletion: boolean) => {
-      if (sessionSavedRef.current) return;
-      sessionSavedRef.current = true;
-
-      const result = naturalCompletion
-        ? { actualDuration: timer.plannedDuration, completed: true }
-        : timer.end();
-
-      const tagId = selectedTagId || defaultTag?._id;
-      if (!tagId) return;
-
-      const status = result.completed ? "completed" : "interrupted";
-      const now = Date.now();
-      const startedAt = now - result.actualDuration * 1000;
-
-      try {
-        await createSession({
-          tagId: tagId as Id<"tags">,
-          plannedDuration: timer.plannedDuration,
-          actualDuration: result.actualDuration,
-          status,
-          startedAt,
-          endedAt: now,
-        });
-
-        if (result.completed) {
-          playComplete();
-          if (Notification.permission === "granted") {
-            new Notification("FokusMode", {
-              body: `Session completed! ${formatTime(result.actualDuration)} focused.`,
-            });
-          }
-          toast.success("Session completed!", {
-            description: `${formatTime(result.actualDuration)} of focused work logged.`,
-          });
-        } else {
-          playInterrupt();
-          toast.info("Session ended", {
-            description: `${formatTime(result.actualDuration)} logged as interrupted.`,
-          });
-        }
-      } catch {
-        toast.error("Failed to save session");
-      }
-    },
-    [timer, selectedTagId, defaultTag, createSession, playComplete, playInterrupt]
-  );
-
-  const handleStart = () => {
-    sessionSavedRef.current = false;
+  const handleStartFocus = () => {
+    setSessionMode("focus");
     if (Notification.permission === "default") {
       Notification.requestPermission();
     }
@@ -136,13 +90,17 @@ export default function FocusPage() {
     timer.start(selectedDuration);
   };
 
-  const handleEnd = () => {
-    handleTimerEnd(false);
+  const handleStartBreak = () => {
+    setSessionMode("break");
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+    playStart();
+    timer.start(breakDuration);
   };
 
-  const handleRestart = () => {
-    sessionSavedRef.current = false;
-    timer.reset();
+  const handleEnd = () => {
+    handleTimerEnd(false);
   };
 
   const handlePreset = (seconds: number, label: string) => {
@@ -194,9 +152,9 @@ export default function FocusPage() {
           </SelectContent>
         </Select>
         {timer.isRunning && (
-          <Badge variant="secondary" className="animate-pulse">
-            <Zap className="w-3 h-3 mr-1" />
-            Focusing
+          <Badge variant={sessionMode === "break" ? "outline" : "secondary"} className={`animate-pulse ${sessionMode === "break" ? "text-emerald-500 border-emerald-500/50" : ""}`}>
+            {sessionMode === "break" ? <Coffee className="w-3 h-3 mr-1" /> : <Zap className="w-3 h-3 mr-1" />}
+            {sessionMode === "break" ? "On Break" : "Focusing"}
           </Badge>
         )}
       </div>
@@ -220,14 +178,14 @@ export default function FocusPage() {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={timer.isRunning ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"}
+            stroke={timer.isRunning ? (sessionMode === "break" ? "hsl(158, 82%, 46%)" : "hsl(var(--primary))") : "hsl(var(--muted-foreground))"}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
             className="transition-all duration-300 ease-linear"
             style={{
-              filter: timer.isRunning ? "drop-shadow(0 0 8px hsl(var(--primary) / 0.5))" : "none",
+              filter: timer.isRunning ? (sessionMode === "break" ? "drop-shadow(0 0 8px hsl(158 82% 46% / 0.5))" : "drop-shadow(0 0 8px hsl(var(--primary) / 0.5))") : "none",
             }}
           />
         </svg>
@@ -237,7 +195,7 @@ export default function FocusPage() {
           <span className="text-6xl font-mono font-light tracking-tighter tabular-nums">
             {timer.isRunning || timer.elapsed > 0
               ? formatTime(timer.timeRemaining)
-              : formatTime(selectedDuration)}
+              : formatTime(sessionMode === "break" ? breakDuration : selectedDuration)}
           </span>
           {timer.isRunning && (
             <span className="text-xs text-muted-foreground mt-2">
@@ -276,61 +234,88 @@ export default function FocusPage() {
       )}
 
       {/* Controls */}
-      <div className="flex items-center gap-4">
-        {!timer.isRunning && timer.elapsed === 0 && (
-          <Button
-            size="lg"
-            onClick={handleStart}
-            disabled={selectedDuration <= 0}
-            className="rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
-          >
-            <Play className="w-5 h-5 mr-2" />
-            Start Focus
-          </Button>
-        )}
-        {timer.isRunning && (
-          <Button
-            size="lg"
-            variant="destructive"
-            onClick={handleEnd}
-            className="rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-destructive/20"
-          >
-            <Square className="w-5 h-5 mr-2" />
-            End Session
-          </Button>
-        )}
-        {!timer.isRunning && timer.elapsed > 0 && (
-          <Button
-            size="lg"
-            onClick={handleRestart}
-            className="rounded-full px-8 h-12 text-base font-semibold"
-          >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            New Session
-          </Button>
-        )}
+      <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          {timer.isRunning && sessionMode === "focus" ? (
+            <Button
+              size="lg"
+              variant="destructive"
+              onClick={handleEnd}
+              className="rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-destructive/20"
+            >
+              <Square className="w-5 h-5 mr-2" />
+              End Focus
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              onClick={handleStartFocus}
+              disabled={selectedDuration <= 0 || (timer.isRunning && sessionMode === "break")}
+              className="rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Start Focus
+            </Button>
+          )}
+
+          <div className={`flex items-center gap-2 p-2 rounded-2xl border transition-all duration-300 ${timer.isRunning && sessionMode === "focus" ? "opacity-50 pointer-events-none border-transparent bg-transparent" : "bg-muted/50 border-white/5"}`}>
+            <Select value={String(breakDuration)} onValueChange={(val) => setBreakDuration(Number(val))} disabled={timer.isRunning}>
+              <SelectTrigger className="w-[80px] h-10 border-none bg-transparent shadow-none focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {BREAK_PRESETS.map((p) => (
+                  <SelectItem key={p.label} value={String(p.seconds)}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {timer.isRunning && sessionMode === "break" ? (
+              <Button
+                variant="destructive"
+                onClick={handleEnd}
+                className="rounded-xl h-10 px-4"
+              >
+                <Square className="w-4 h-4 mr-2" />
+                End Break
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={handleStartBreak}
+                disabled={timer.isRunning && sessionMode === "focus"}
+                className="rounded-xl h-10 px-4 bg-[#10b981] hover:bg-[#059669] text-white hover:text-white transition-colors"
+              >
+                <Coffee className="w-4 h-4 mr-2" />
+                Start Break
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Recent session indicator */}
-      {!timer.isRunning && timer.elapsed > 0 && (
+      {lastRecorded && (
         <Card className="glass-dark max-w-sm w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
           <CardContent className="pt-4 pb-4 flex items-center gap-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{
-                backgroundColor: tags?.find((t) => t._id === selectedTagId)?.color || "#94a3b8",
+                backgroundColor: lastRecorded.mode === "break" ? "#10b981" : (tags?.find((t) => t._id === lastRecorded.tagId)?.color || "#94a3b8"),
               }}
             >
-              <Zap className="w-5 h-5 text-white" />
+              {lastRecorded.mode === "break" ? <Coffee className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">Session recorded</p>
+              <p className="text-sm font-medium">{lastRecorded.mode === "break" ? "Break recorded" : "Session recorded"}</p>
               <p className="text-xs text-muted-foreground">
-                {formatTime(Math.round(timer.elapsed))} / {formatTime(timer.plannedDuration)}
+                {formatTime(Math.round(lastRecorded.elapsed))} / {formatTime(lastRecorded.planned)}
               </p>
             </div>
-            <Badge variant={timer.elapsed >= timer.plannedDuration ? "default" : "secondary"}>
-              {timer.elapsed >= timer.plannedDuration ? "Completed" : "Interrupted"}
+            <Badge variant={lastRecorded.completed ? "default" : "secondary"}>
+              {lastRecorded.completed ? "Completed" : "Interrupted"}
             </Badge>
           </CardContent>
         </Card>

@@ -7,7 +7,7 @@ import DailyChart from "@/components/stats/DailyChart";
 import WeeklyComparison from "@/components/stats/WeeklyComparison";
 import TagBreakdown from "@/components/stats/TagBreakdown";
 import SessionHistory from "@/components/stats/SessionHistory";
-import { Clock, CheckCircle, Zap, Flame } from "lucide-react";
+import { Clock, CheckCircle, Zap, Flame, Coffee } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks } from "date-fns";
 
 export default function StatsPage() {
@@ -33,6 +33,7 @@ export default function StatsPage() {
   const thirtyDaysAgo = subDays(startOfDay(now), 29).getTime();
 
   const todayStats = useQuery(api.sessions.getStats, { start: todayStart, end: todayEnd });
+  const todayBreaks = useQuery(api.breaks.getStats, { start: todayStart, end: todayEnd });
   const thisWeekStats = useQuery(api.sessions.getStats, { start: thisWeekStart, end: thisWeekEnd });
   const lastWeekStats = useQuery(api.sessions.getStats, { start: lastWeekStart, end: lastWeekEnd });
   const dailyBreakdown = useQuery(api.sessions.getDailyBreakdown, { start: sevenDaysAgo, end: todayEnd });
@@ -131,6 +132,23 @@ export default function StatsPage() {
           subtitle="consecutive focus days"
           icon={Flame}
           iconColor="#ef4444"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryCard
+          title="Break Time"
+          value={formatDuration(todayBreaks?.totalDuration || 0)}
+          subtitle="total break time today"
+          icon={Coffee}
+          iconColor="#10b981"
+        />
+        <SummaryCard
+          title="Breaks Taken"
+          value={String(todayBreaks?.breakCount || 0)}
+          subtitle="breaks today"
+          icon={CheckCircle}
+          iconColor="#10b981"
         />
       </div>
 

@@ -26,7 +26,17 @@ export interface CalendarEvent extends Event {
   status: "completed" | "interrupted";
   plannedDuration: number;
   actualDuration: number;
-  tagId: string;
+  tagId?: string;
+  isBreak?: boolean;
+}
+
+export interface BreakDoc {
+  _id: string;
+  plannedDuration: number;
+  actualDuration: number;
+  status: "completed" | "interrupted";
+  startedAt: number;
+  endedAt: number;
 }
 
 export function sessionsToEvents(
@@ -55,6 +65,30 @@ export function sessionsToEvents(
       plannedDuration: s.plannedDuration,
       actualDuration: s.actualDuration,
       tagId: s.tagId,
+    };
+  });
+}
+
+export function breaksToEvents(breaks: BreakDoc[]): CalendarEvent[] {
+  return breaks.map((b) => {
+    const start = new Date(b.startedAt);
+    
+    // Enforce a minimum visual duration (e.g., 15 minutes) so it renders correctly in Week and Day views
+    const durationMs = b.endedAt - b.startedAt;
+    const minVisualDurationMs = 15 * 60 * 1000; 
+    const end = new Date(start.getTime() + Math.max(durationMs, minVisualDurationMs));
+
+    return {
+      id: b._id,
+      title: "Break",
+      start,
+      end,
+      tagColor: "#10b981", // Emerald
+      tagName: "Break",
+      status: b.status,
+      plannedDuration: b.plannedDuration,
+      actualDuration: b.actualDuration,
+      isBreak: true,
     };
   });
 }

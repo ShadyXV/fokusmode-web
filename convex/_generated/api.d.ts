@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as breaks from "../breaks.js";
+import type * as distractionTags from "../distractionTags.js";
+import type * as distractions from "../distractions.js";
 import type * as seed from "../seed.js";
 import type * as sessions from "../sessions.js";
 import type * as tags from "../tags.js";
@@ -19,6 +22,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  breaks: typeof breaks;
+  distractionTags: typeof distractionTags;
+  distractions: typeof distractions;
   seed: typeof seed;
   sessions: typeof sessions;
   tags: typeof tags;

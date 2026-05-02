@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TimerProvider } from "@/context/TimerContext";
 import App from "./App";
 import "./index.css";
 
@@ -14,8 +15,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ConvexProvider client={convex}>
       <TooltipProvider>
         <BrowserRouter>
-          <App />
-          <Toaster position="top-center" richColors />
+          <TimerProvider>
+            <App />
+            <Toaster position="top-center" richColors />
+          </TimerProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ConvexProvider>

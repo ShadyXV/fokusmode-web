@@ -3,6 +3,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import FocusPage from "@/pages/FocusPage";
 import CalendarPage from "@/pages/CalendarPage";
 import TagsPage from "@/pages/TagsPage";
+import DistractionsPage from "@/pages/DistractionsPage";
 import StatsPage from "@/pages/StatsPage";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<FocusPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/tags" element={<TagsPage />} />
+        <Route path="/distractions" element={<DistractionsPage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

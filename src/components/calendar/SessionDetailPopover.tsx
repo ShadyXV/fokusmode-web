@@ -60,24 +60,30 @@ export default function SessionDetailPopover({
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <Select value={event.tagId} onValueChange={handleTagChange}>
-                <SelectTrigger className="h-6 w-full border-none shadow-none px-0 py-0 focus:ring-0 font-semibold text-sm hover:text-primary transition-colors">
-                  <div className="truncate text-left w-full"><SelectValue /></div>
-                </SelectTrigger>
-                <SelectContent>
-                  {tags?.map((tag) => (
-                    <SelectItem key={tag._id} value={tag._id}>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: tag.color }}
-                        />
-                        {tag.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {event.isBreak ? (
+                <div className="h-6 flex items-center font-semibold text-sm">
+                  {event.tagName}
+                </div>
+              ) : (
+                <Select value={event.tagId} onValueChange={handleTagChange}>
+                  <SelectTrigger className="h-6 w-full border-none shadow-none px-0 py-0 focus:ring-0 font-semibold text-sm hover:text-primary transition-colors">
+                    <div className="truncate text-left w-full"><SelectValue /></div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tags?.map((tag) => (
+                      <SelectItem key={tag._id} value={tag._id}>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: tag.color }}
+                          />
+                          {tag.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <p className="text-xs text-muted-foreground">
                 {format(event.start, "MMM d, yyyy")}
               </p>

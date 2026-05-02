@@ -14,8 +14,8 @@ export function TimePicker({ value, onChange, placeholder = "--:--", className =
 
   // Generate hours 00-23
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
-  // Generate minutes in 5-minute intervals
-  const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, "0"));
+  // Generate minutes 00-59
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"));
 
   const [selectedHour, selectedMinute] = value ? value.split(":") : ["", ""];
 
@@ -28,6 +28,22 @@ export function TimePicker({ value, onChange, placeholder = "--:--", className =
     const hr = selectedHour || "12";
     onChange(`${hr}:${min}`);
   };
+
+  const selectedHourRef = React.useRef<HTMLButtonElement>(null);
+  const selectedMinuteRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        if (selectedHourRef.current) {
+          selectedHourRef.current.scrollIntoView({ block: "center" });
+        }
+        if (selectedMinuteRef.current) {
+          selectedMinuteRef.current.scrollIntoView({ block: "center" });
+        }
+      }, 50); // slight delay to ensure Radix Popover has mounted content
+    }
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -46,20 +62,24 @@ export function TimePicker({ value, onChange, placeholder = "--:--", className =
               <span className="text-[10px] font-semibold text-muted-foreground uppercase text-center py-1 sticky top-0 bg-card/80 backdrop-blur-md z-10 rounded-sm mb-1">
                 Hour
               </span>
-              {hours.map((hour) => (
-                <button
-                  key={hour}
-                  type="button"
-                  onClick={() => handleHourSelect(hour)}
-                  className={`flex items-center justify-center py-2 text-sm rounded-md transition-colors ${
-                    selectedHour === hour
-                      ? "bg-amber-500 text-white font-medium shadow-sm shadow-amber-500/20"
-                      : "hover:bg-white/10 text-muted-foreground"
-                  }`}
-                >
-                  {hour}
-                </button>
-              ))}
+              {hours.map((hour) => {
+                const isSelected = selectedHour === hour;
+                return (
+                  <button
+                    key={hour}
+                    type="button"
+                    ref={isSelected ? selectedHourRef : null}
+                    onClick={() => handleHourSelect(hour)}
+                    className={`flex items-center justify-center py-2 text-sm rounded-md transition-colors ${
+                      isSelected
+                        ? "bg-amber-500 text-white font-medium shadow-sm shadow-amber-500/20"
+                        : "hover:bg-white/10 text-muted-foreground"
+                    }`}
+                  >
+                    {hour}
+                  </button>
+                );
+              })}
             </div>
           </ScrollArea>
           <ScrollArea className="w-1/2">
@@ -67,20 +87,24 @@ export function TimePicker({ value, onChange, placeholder = "--:--", className =
               <span className="text-[10px] font-semibold text-muted-foreground uppercase text-center py-1 sticky top-0 bg-card/80 backdrop-blur-md z-10 rounded-sm mb-1">
                 Min
               </span>
-              {minutes.map((min) => (
-                <button
-                  key={min}
-                  type="button"
-                  onClick={() => handleMinuteSelect(min)}
-                  className={`flex items-center justify-center py-2 text-sm rounded-md transition-colors ${
-                    selectedMinute === min
-                      ? "bg-amber-500 text-white font-medium shadow-sm shadow-amber-500/20"
-                      : "hover:bg-white/10 text-muted-foreground"
-                  }`}
-                >
-                  {min}
-                </button>
-              ))}
+              {minutes.map((min) => {
+                const isSelected = selectedMinute === min;
+                return (
+                  <button
+                    key={min}
+                    type="button"
+                    ref={isSelected ? selectedMinuteRef : null}
+                    onClick={() => handleMinuteSelect(min)}
+                    className={`flex items-center justify-center py-2 text-sm rounded-md transition-colors ${
+                      isSelected
+                        ? "bg-amber-500 text-white font-medium shadow-sm shadow-amber-500/20"
+                        : "hover:bg-white/10 text-muted-foreground"
+                    }`}
+                  >
+                    {min}
+                  </button>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>

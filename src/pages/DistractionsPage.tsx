@@ -186,18 +186,18 @@ export default function DistractionsPage() {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full"
+          className="rounded-full h-10 px-4"
           onClick={() => setManagerOpen(true)}
         >
-          <Settings className="w-4 h-4 mr-2" />
+          <Settings className="w-6 h-6 mr-2" />
           Manage Tags
         </Button>
       </div>
 
       {/* Log Form */}
       <div className="glass rounded-2xl p-5 space-y-4 border border-white/5">
-        <div className="flex items-center gap-2 text-sm font-semibold text-amber-400">
-          <AlertTriangle className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-sm font-bold text-amber-400 mb-1">
+          <AlertTriangle className="w-6 h-6" />
           Log a Distraction
         </div>
 
@@ -215,9 +215,9 @@ export default function DistractionsPage() {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-[220px] justify-start gap-2 font-normal"
+                className="w-[220px] h-10 justify-start gap-2.5 font-medium text-sm"
               >
-                <Search className="w-3.5 h-3.5 text-muted-foreground" />
+                <Search className="w-[21px] h-[21px] text-muted-foreground" />
                 {selectedTag ? selectedTag.name : "Select tag..."}
               </Button>
             </PopoverTrigger>
@@ -234,11 +234,10 @@ export default function DistractionsPage() {
                   {filteredTags.map((tag) => (
                     <button
                       key={tag._id}
-                      className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${
-                        selectedTagId === tag._id
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-accent/50"
-                      }`}
+                      className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${selectedTagId === tag._id
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent/50"
+                        }`}
                       onClick={() => {
                         setSelectedTagId(tag._id);
                         setTagSearch("");
@@ -250,10 +249,10 @@ export default function DistractionsPage() {
                   ))}
                   {!exactMatch && tagSearch.trim() && (
                     <button
-                      className="w-full text-left text-sm px-2 py-1.5 rounded-md hover:bg-accent/50 text-amber-400 flex items-center gap-1.5"
+                      className="w-full text-left text-sm px-2.5 py-2 rounded-md hover:bg-accent/50 text-amber-400 flex items-center gap-2"
                       onClick={handleCreateInlineTag}
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-[21px] h-[21px]" />
                       Create "{tagSearch.trim()}"
                     </button>
                   )}
@@ -278,8 +277,8 @@ export default function DistractionsPage() {
 
         {/* Time range */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center bg-background/40 border border-white/5 rounded-xl px-2 py-1 focus-within:ring-1 focus-within:ring-amber-500/50 transition-all shadow-inner">
-            <Clock className="w-4 h-4 text-amber-500/70 ml-1 mr-2" />
+          <div className="flex items-center bg-background/40 border border-white/5 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-amber-500/50 transition-all shadow-inner">
+            <Clock className="w-6 h-6 text-amber-500/70 ml-1 mr-2" />
             <TimePicker
               value={startTime}
               onChange={(val) => handleTimeChange("start", val)}
@@ -293,9 +292,9 @@ export default function DistractionsPage() {
           <Button
             onClick={handleSubmit}
             disabled={!selectedTagId || !startTime || !endTime}
-            className="ml-auto rounded-full shadow-lg shadow-amber-500/20 bg-amber-600 hover:bg-amber-700 text-white border-none transition-all"
+            className="ml-auto rounded-full shadow-lg shadow-amber-500/20 bg-amber-600 hover:bg-amber-700 text-white border-none transition-all h-12 px-6 text-base font-bold"
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-10 h-10 mr-2" />
             Log Distraction
           </Button>
         </div>
@@ -309,12 +308,12 @@ export default function DistractionsPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-10 w-10"
               onClick={() => setViewDate(subDays(viewDate, 1))}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-16 h-16" />
             </Button>
-            <span className="text-sm font-medium min-w-[140px] text-center">
+            <span className="text-sm font-bold min-w-[150px] text-center">
               {isToday
                 ? "Today"
                 : format(viewDate, "EEEE, MMM d")}
@@ -322,10 +321,10 @@ export default function DistractionsPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-10 w-10"
               onClick={() => setViewDate(addDays(viewDate, 1))}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-6 h-6" />
             </Button>
             {!isToday && (
               <Button

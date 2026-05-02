@@ -85,8 +85,8 @@ export default function TagsPage() {
           onOpenChange={setCreateOpen}
           onSubmit={handleCreate}
           trigger={
-            <Button className="rounded-full shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button className="rounded-full shadow-lg shadow-primary/20 h-11 px-5 text-sm font-semibold">
+              <Plus className="w-6 h-6 mr-2" />
               New Tag
             </Button>
           }
@@ -112,8 +112,8 @@ export default function TagsPage() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-            <Tag className="w-8 h-8 text-muted-foreground" />
+          <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-5">
+            <Tag className="w-12 h-12 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold mb-1">No tags yet</h3>
           <p className="text-muted-foreground text-sm max-w-sm">

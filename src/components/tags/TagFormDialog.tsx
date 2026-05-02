@@ -77,7 +77,7 @@ export default function TagFormDialog({
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-lg transition-all duration-150 hover:scale-110 ${
+                  className={`w-[48px] h-[48px] rounded-xl transition-all duration-150 hover:scale-110 ${
                     color === c
                       ? "ring-2 ring-offset-2 ring-offset-background ring-primary scale-110"
                       : "opacity-70 hover:opacity-100"
@@ -89,7 +89,7 @@ export default function TagFormDialog({
           </div>
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-xl shrink-0"
+              className="w-[60px] h-[60px] rounded-2xl shrink-0"
               style={{ backgroundColor: color }}
             />
             <div className="flex-1 text-sm">

@@ -146,9 +146,9 @@ export default function FocusPage() {
           </SelectContent>
         </Select>
         {timer.isRunning && (
-          <Badge variant={sessionMode === "break" ? "outline" : "secondary"} className={`animate-pulse ${sessionMode === "break" ? "text-emerald-500 border-emerald-500/50" : ""}`}>
-            {sessionMode === "break" ? <Coffee className="w-3 h-3 mr-1" /> : <Zap className="w-3 h-3 mr-1" />}
-            {sessionMode === "break" ? "On Break" : "Focusing"}
+          <Badge variant={sessionMode === "break" ? "outline" : "secondary"} className={`animate-pulse py-1 px-2.5 ${sessionMode === "break" ? "text-emerald-500 border-emerald-500/50" : ""}`}>
+            {sessionMode === "break" ? <Coffee className="w-[18px] h-[18px] mr-1.5" /> : <Zap className="w-[18px] h-[18px] mr-1.5" />}
+            <span className="text-xs font-medium">{sessionMode === "break" ? "On Break" : "Focusing"}</span>
           </Badge>
         )}
       </div>
@@ -199,22 +199,23 @@ export default function FocusPage() {
         </div>
       </div>
 
-      {/* Preset buttons */}
+      {/* Preset buttons & Custom Timer Pill */}
       {!timer.isRunning && timer.elapsed === 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-2xl">
+        <div className="flex flex-wrap items-center justify-center gap-4 w-full max-w-2xl">
           {PRESETS.map((p) => (
             <Button
               key={p.label}
               variant={activePreset === p.label ? "default" : "outline"}
               size="sm"
               onClick={() => handlePreset(p.seconds, p.label)}
-              className="rounded-full min-w-[52px] transition-all duration-200"
+              className="rounded-full min-w-[56px] transition-all duration-200"
             >
               {p.label}
             </Button>
           ))}
+          
           <div
-            className={`flex items-center bg-background/50 border border-white/10 rounded-full h-9 px-1 shadow-inner group cursor-ew-resize select-none`}
+            className={`flex items-center bg-background/50 border border-white/10 rounded-full h-11 px-1.5 shadow-inner group cursor-ew-resize select-none`}
             style={{
               transform: isDragging 
                 ? `scaleX(${1 + Math.min(0.12, Math.abs(dragDeltaX) / 800)})` 
@@ -237,7 +238,7 @@ export default function FocusPage() {
               const deltaX = e.clientX - dragStartX.current;
               setDragDeltaX(deltaX);
               
-              if (Math.abs(deltaX) < 5) return; // ignore tiny movements
+              if (Math.abs(deltaX) < 5) return;
 
               const deltaMins = Math.round(deltaX / 3);
               const newSecs = Math.max(60, Math.min(180 * 60, dragStartVal.current + deltaMins * 60));
@@ -256,32 +257,30 @@ export default function FocusPage() {
           >
             <button
               onClick={(e) => {
-                // Only trigger if it wasn't a significant drag
                 const deltaX = Math.abs(e.clientX - dragStartX.current);
                 if (deltaX > 10) return;
                 setSelectedDuration(Math.max(60, selectedDuration - 5 * 60));
                 setActivePreset(null);
               }}
-              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
+              className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
               title="Decrease 5m"
             >
-              <Minus className="w-3.5 h-3.5" />
+              <Minus className="w-[21px] h-[21px]" />
             </button>
-            <div className="w-12 text-center text-sm font-medium text-foreground">
+            <div className="w-14 text-center text-base font-semibold text-foreground">
               {Math.round(selectedDuration / 60)}m
             </div>
             <button
               onClick={(e) => {
-                // Only trigger if it wasn't a significant drag
                 const deltaX = Math.abs(e.clientX - dragStartX.current);
                 if (deltaX > 10) return;
                 setSelectedDuration(Math.min(180 * 60, selectedDuration + 5 * 60));
                 setActivePreset(null);
               }}
-              className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
+              className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
               title="Increase 5m"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-[21px] h-[21px]" />
             </button>
           </div>
         </div>
@@ -295,9 +294,9 @@ export default function FocusPage() {
               size="lg"
               variant="destructive"
               onClick={handleEnd}
-              className="rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-destructive/20"
+              className="rounded-full px-9 h-14 text-base font-bold shadow-lg shadow-destructive/20"
             >
-              <Square className="w-5 h-5 mr-2" />
+              <Square className="w-[30px] h-[30px] mr-2.5" />
               End Focus
             </Button>
           ) : (
@@ -305,9 +304,9 @@ export default function FocusPage() {
               size="lg"
               onClick={handleStartFocus}
               disabled={selectedDuration <= 0 || (timer.isRunning && sessionMode === "break")}
-              className="rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+              className="rounded-full px-9 h-14 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
             >
-              <Play className="w-5 h-5 mr-2" />
+              <Play className="w-[30px] h-[30px] mr-2.5" />
               Start Focus
             </Button>
           )}
@@ -330,9 +329,9 @@ export default function FocusPage() {
               <Button
                 variant="destructive"
                 onClick={handleEnd}
-                className="rounded-xl h-10 px-4"
+                className="rounded-xl h-12 px-5 text-sm font-semibold"
               >
-                <Square className="w-4 h-4 mr-2" />
+                <Square className="w-[24px] h-[24px] mr-2" />
                 End Break
               </Button>
             ) : (
@@ -340,9 +339,9 @@ export default function FocusPage() {
                 variant="secondary"
                 onClick={handleStartBreak}
                 disabled={timer.isRunning && sessionMode === "focus"}
-                className="rounded-xl h-10 px-4 bg-[#10b981] hover:bg-[#059669] text-white hover:text-white transition-colors"
+                className="rounded-xl h-12 px-5 text-sm font-semibold bg-[#10b981] hover:bg-[#059669] text-white hover:text-white transition-colors"
               >
-                <Coffee className="w-4 h-4 mr-2" />
+                <Coffee className="w-[24px] h-[24px] mr-2" />
                 Start Break
               </Button>
             )}
@@ -353,17 +352,17 @@ export default function FocusPage() {
       {/* Recent session indicator */}
       {lastRecorded && (
         <Card className="glass-dark max-w-sm w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <CardContent className="pt-4 pb-4 flex items-center gap-4">
+          <CardContent className="pt-5 pb-5 flex items-center gap-5">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
               style={{
                 backgroundColor: lastRecorded.mode === "break" ? "#10b981" : (tags?.find((t) => t._id === lastRecorded.tagId)?.color || "#94a3b8"),
               }}
             >
-              {lastRecorded.mode === "break" ? <Coffee className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
+              {lastRecorded.mode === "break" ? <Coffee className="w-[30px] h-[30px] text-white" /> : <Zap className="w-[30px] h-[30px] text-white" />}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">{lastRecorded.mode === "break" ? "Break recorded" : "Session recorded"}</p>
+              <p className="text-sm font-bold">{lastRecorded.mode === "break" ? "Break recorded" : "Session recorded"}</p>
               <p className="text-xs text-muted-foreground">
                 {formatTime(Math.round(lastRecorded.elapsed))} / {formatTime(lastRecorded.planned)}
               </p>

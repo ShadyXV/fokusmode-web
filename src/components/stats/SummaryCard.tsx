@@ -30,10 +30,10 @@ export default function SummaryCard({
             )}
           </div>
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
             style={{ backgroundColor: `${iconColor}20` }}
           >
-            <Icon className="w-5 h-5" style={{ color: iconColor }} />
+            <Icon className="w-[30px] h-[30px]" style={{ color: iconColor }} />
           </div>
         </div>
       </CardContent>

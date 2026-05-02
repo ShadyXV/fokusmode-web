@@ -135,6 +135,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     prevRunningRef.current = timer.isRunning;
   }, [timer.isRunning, timer.elapsed, timer.plannedDuration, handleTimerEnd]);
 
+  useEffect(() => {
+    if (timer.isRunning) {
+      const timeStr = formatTime(timer.timeRemaining);
+      const modeStr = sessionMode === "focus" ? "Focus" : "Break";
+      document.title = `${timeStr} ${modeStr} - FokusMode`;
+    } else {
+      document.title = "FokusMode";
+    }
+  }, [timer.isRunning, timer.timeRemaining, sessionMode]);
+
   return (
     <TimerContext.Provider
       value={{

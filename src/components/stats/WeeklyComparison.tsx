@@ -35,7 +35,7 @@ function ComparisonRow({
       <div className="flex items-center gap-3">
         <span className="text-sm font-medium">{formatter(current)}</span>
         <div
-          className={`flex items-center gap-0.5 text-xs font-medium ${
+          className={`flex items-center gap-1 text-[11px] font-bold ${
             diff > 0
               ? "text-green-400"
               : diff < 0
@@ -44,11 +44,11 @@ function ComparisonRow({
           }`}
         >
           {diff > 0 ? (
-            <ArrowUp className="w-3 h-3" />
+            <ArrowUp className="w-[18px] h-[18px]" />
           ) : diff < 0 ? (
-            <ArrowDown className="w-3 h-3" />
+            <ArrowDown className="w-[18px] h-[18px]" />
           ) : (
-            <Minus className="w-3 h-3" />
+            <Minus className="w-[18px] h-[18px]" />
           )}
           {Math.abs(pctChange)}%
         </div>

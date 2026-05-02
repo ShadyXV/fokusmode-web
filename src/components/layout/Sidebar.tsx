@@ -16,11 +16,11 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-card/30 backdrop-blur-xl flex-col h-screen sticky top-0 hidden md:flex">
+      <aside className="w-64 border-r border-white/5 bg-card/30 backdrop-blur-xl flex-col h-screen sticky top-0 hidden md:flex transition-all duration-300">
         <div className="p-6">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-              <Timer className="w-5 h-5 text-white" />
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+              <Timer className="w-[30px] h-[30px] text-white" />
             </div>
             <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               FokusMode
@@ -39,22 +39,22 @@ export default function Sidebar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+                  "flex items-center gap-3.5 px-3.5 py-3 rounded-2xl transition-all duration-200 group relative",
                   isActive
                     ? "bg-gradient-to-r from-violet-500/15 to-indigo-500/10 text-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                 )}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-violet-400 to-indigo-500 rounded-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-gradient-to-b from-violet-400 to-indigo-500 rounded-full" />
                 )}
                 <item.icon
                   className={cn(
-                    "w-[18px] h-[18px] transition-colors",
+                    "w-[27px] h-[27px] transition-colors shrink-0",
                     isActive ? "text-violet-400" : ""
                   )}
                 />
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className="font-semibold text-sm">{item.label}</span>
               </NavLink>
             );
           })}
@@ -86,14 +86,14 @@ export default function Sidebar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 min-w-[56px]",
+                  "flex flex-col items-center gap-1.5 px-3 py-2 rounded-2xl transition-all duration-200 min-w-[64px]",
                   isActive
                     ? "text-violet-400"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <item.icon className="w-[30px] h-[30px]" />
+                <span className="text-[11px] font-semibold">{item.label}</span>
               </NavLink>
             );
           })}

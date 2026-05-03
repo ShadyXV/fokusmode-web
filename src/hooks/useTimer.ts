@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface TimerState {
   timeRemaining: number;
@@ -13,7 +13,7 @@ export function useTimer() {
   const [plannedDuration, setPlannedDuration] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const startTimeRef = useRef<number>(0);
-  const rafRef = useRef<number>(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const timeRemaining = Math.max(0, plannedDuration - elapsed);
   const progress = plannedDuration > 0 ? Math.min(1, elapsed / plannedDuration) : 0;
@@ -21,50 +21,72 @@ export function useTimer() {
   const tick = useCallback(() => {
     const now = Date.now();
     const newElapsed = (now - startTimeRef.current) / 1000;
-    setElapsed(newElapsed);
-
+    
     if (newElapsed >= plannedDuration) {
       // Timer completed naturally
       setIsRunning(false);
       setElapsed(plannedDuration);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       return;
     }
 
-    rafRef.current = requestAnimationFrame(tick);
+    setElapsed(newElapsed);
   }, [plannedDuration]);
 
   useEffect(() => {
     if (isRunning) {
-      rafRef.current = requestAnimationFrame(tick);
+      // Use a shorter interval for smooth progress bar (100ms)
+      // Browsers will throttle this to ~1s in background, which is fine for title bar
+      intervalRef.current = setInterval(tick, 100);
     }
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [isRunning, tick]);
 
-  const start = useCallback((durationSeconds: number) => {
+  const start = useCallback((durationSeconds: number, resumeStartTime?: number) => {
     setPlannedDuration(durationSeconds);
-    setElapsed(0);
-    startTimeRef.current = Date.now();
+    if (resumeStartTime) {
+      startTimeRef.current = resumeStartTime;
+      const now = Date.now();
+      const initialElapsed = (now - resumeStartTime) / 1000;
+      setElapsed(initialElapsed);
+    } else {
+      setElapsed(0);
+      startTimeRef.current = Date.now();
+    }
     setIsRunning(true);
   }, []);
 
   const end = useCallback((): { actualDuration: number; completed: boolean } => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setIsRunning(false);
     const actualDuration = Math.round(elapsed);
-    const completed = elapsed >= plannedDuration;
+    const completed = elapsed >= plannedDuration - 0.5; // allowance for rounding
     return { actualDuration, completed };
   }, [elapsed, plannedDuration]);
 
   const reset = useCallback(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setIsRunning(false);
     setElapsed(0);
     setPlannedDuration(0);
+    startTimeRef.current = 0;
   }, []);
 
-  return {
+  return useMemo(() => ({
     timeRemaining,
     elapsed,
     isRunning,
@@ -74,5 +96,5 @@ export function useTimer() {
     end,
     reset,
     startTimestamp: startTimeRef.current,
-  };
+  }), [timeRemaining, elapsed, isRunning, plannedDuration, progress, start, end, reset]);
 }

@@ -53,6 +53,7 @@ export default function FocusPage() {
     setSelectedTagId,
     lastRecorded,
     handleTimerEnd,
+    startTimer,
   } = useTimerContext();
 
   const { playStart } = useTimerSound();
@@ -91,7 +92,7 @@ export default function FocusPage() {
       Notification.requestPermission();
     }
     playStart();
-    timer.start(selectedDuration);
+    startTimer(selectedDuration, "focus", selectedTagId);
   };
 
   const handleStartBreak = () => {
@@ -100,7 +101,7 @@ export default function FocusPage() {
       Notification.requestPermission();
     }
     playStart();
-    timer.start(breakDuration);
+    startTimer(breakDuration, "break");
   };
 
   const handleEnd = () => {

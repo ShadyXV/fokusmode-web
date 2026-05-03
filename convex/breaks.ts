@@ -14,6 +14,13 @@ export const create = mutation({
   },
 });
 
+export const remove = mutation({
+  args: { id: v.id("breaks") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const listByDateRange = query({
   args: {
     start: v.number(),

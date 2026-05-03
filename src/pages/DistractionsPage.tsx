@@ -292,9 +292,9 @@ export default function DistractionsPage() {
           <Button
             onClick={handleSubmit}
             disabled={!selectedTagId || !startTime || !endTime}
-            className="ml-auto rounded-full shadow-lg shadow-amber-500/20 bg-amber-600 hover:bg-amber-700 text-white border-none transition-all h-12 px-6 text-base font-bold"
+            className="ml-auto rounded-full shadow-lg shadow-amber-500/20 bg-amber-600 hover:bg-amber-700 text-white border-none transition-all h-14 px-8 text-lg font-bold"
           >
-            <Save className="w-10 h-10 mr-2" />
+            <Save className="w-12 h-12 mr-3" />
             Log Distraction
           </Button>
         </div>
@@ -308,7 +308,7 @@ export default function DistractionsPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10"
+              className="h-16 w-16"
               onClick={() => setViewDate(subDays(viewDate, 1))}
             >
               <ChevronLeft className="w-16 h-16" />
@@ -321,10 +321,10 @@ export default function DistractionsPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10"
+              className="h-16 w-16"
               onClick={() => setViewDate(addDays(viewDate, 1))}
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-16 h-16" />
             </Button>
             {!isToday && (
               <Button

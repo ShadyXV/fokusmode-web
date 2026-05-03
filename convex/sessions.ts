@@ -15,6 +15,13 @@ export const create = mutation({
   },
 });
 
+export const remove = mutation({
+  args: { id: v.id("sessions") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const updateTag = mutation({
   args: {
     id: v.id("sessions"),

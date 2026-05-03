@@ -22,7 +22,7 @@ interface TimerContextValue {
   setSelectedTagId: (id: string) => void;
   lastRecorded: LastRecordedSession | null;
   handleTimerEnd: (naturalCompletion: boolean) => Promise<void>;
-  startTimer: (duration: number) => void;
+  startTimer: (duration: number, mode?: "focus" | "break", tagId?: string) => void;
 }
 
 const TimerContext = createContext<TimerContextValue | null>(null);
@@ -41,11 +41,31 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const prevRunningRef = useRef(false);
   const sessionSavedRef = useRef(false);
+  const isRestoringRef = useRef(true);
 
-  const startTimer = useCallback((duration: number) => {
+  // Persistence keys
+  const STORAGE_KEYS = {
+    ACTIVE: "fokus_session_active",
+    START_TIME: "fokus_session_startTime",
+    DURATION: "fokus_session_duration",
+    MODE: "fokus_session_mode",
+    TAG_ID: "fokus_session_tagId",
+  };
+
+  const startTimer = useCallback((duration: number, mode?: "focus" | "break", tagId?: string) => {
     sessionSavedRef.current = false;
+    const now = Date.now();
+    const targetMode = mode || sessionMode;
+    const targetTagId = tagId || selectedTagId;
+
+    localStorage.setItem(STORAGE_KEYS.ACTIVE, "true");
+    localStorage.setItem(STORAGE_KEYS.START_TIME, String(now));
+    localStorage.setItem(STORAGE_KEYS.DURATION, String(duration));
+    localStorage.setItem(STORAGE_KEYS.MODE, targetMode);
+    localStorage.setItem(STORAGE_KEYS.TAG_ID, targetTagId);
+
     timer.start(duration);
-  }, [timer]);
+  }, [timer, sessionMode, selectedTagId]);
 
   const formatTime = (seconds: number): string => {
     const hrs = Math.floor(seconds / 3600);
@@ -120,6 +140,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           tagId: sessionMode === "focus" ? (tagId as string) : undefined,
         });
 
+        // Clear persistence
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE);
+        localStorage.removeItem(STORAGE_KEYS.START_TIME);
+        localStorage.removeItem(STORAGE_KEYS.DURATION);
+        localStorage.removeItem(STORAGE_KEYS.MODE);
+        localStorage.removeItem(STORAGE_KEYS.TAG_ID);
+
         timer.reset();
       } catch {
         toast.error("Failed to save session");
@@ -128,6 +155,45 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [timer, selectedTagId, defaultTag, createSession, createBreak, playComplete, playInterrupt, sessionMode]
   );
 
+  // Restore session on mount
+  useEffect(() => {
+    if (!isRestoringRef.current) return;
+    isRestoringRef.current = false;
+
+    const isActive = localStorage.getItem(STORAGE_KEYS.ACTIVE) === "true";
+    if (isActive) {
+      const startTime = Number(localStorage.getItem(STORAGE_KEYS.START_TIME));
+      const duration = Number(localStorage.getItem(STORAGE_KEYS.DURATION));
+      const mode = localStorage.getItem(STORAGE_KEYS.MODE) as "focus" | "break";
+      const tagId = localStorage.getItem(STORAGE_KEYS.TAG_ID) || "";
+
+      const now = Date.now();
+      const elapsed = (now - startTime) / 1000;
+
+      if (elapsed < duration) {
+        setSessionMode(mode);
+        setSelectedTagId(tagId);
+        timer.start(duration, startTime);
+        toast.info("Session restored", {
+          description: `Continuing your ${mode} session.`,
+        });
+      } else {
+        // Session finished while away, backfill it
+        setSessionMode(mode);
+        setSelectedTagId(tagId);
+        
+        // Use a small timeout to ensure Convex/State are ready
+        setTimeout(() => {
+          handleTimerEnd(true);
+          toast.success("Session completed", {
+            description: `Your ${mode} session finished while you were away.`,
+          });
+        }, 1000);
+      }
+    }
+  }, []); // Only run on mount
+
+  // Handle natural completion
   useEffect(() => {
     if (prevRunningRef.current && !timer.isRunning && timer.elapsed >= timer.plannedDuration && timer.plannedDuration > 0 && !sessionSavedRef.current) {
       handleTimerEnd(true);
@@ -135,15 +201,32 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     prevRunningRef.current = timer.isRunning;
   }, [timer.isRunning, timer.elapsed, timer.plannedDuration, handleTimerEnd]);
 
+  // Update document title
   useEffect(() => {
     if (timer.isRunning) {
       const timeStr = formatTime(timer.timeRemaining);
       const modeStr = sessionMode === "focus" ? "Focus" : "Break";
-      document.title = `${timeStr} ${modeStr} - FokusMode`;
+      const newTitle = `${timeStr} ${modeStr} - FokusMode`;
+      if (document.title !== newTitle) {
+        document.title = newTitle;
+      }
     } else {
-      document.title = "FokusMode";
+      if (document.title !== "FokusMode") {
+        document.title = "FokusMode";
+      }
     }
   }, [timer.isRunning, timer.timeRemaining, sessionMode]);
+
+  // Force refresh on visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && timer.isRunning) {
+        // Title will update via the effect above as timeRemaining changes
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [timer.isRunning]);
 
   return (
     <TimerContext.Provider

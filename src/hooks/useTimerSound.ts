@@ -1,13 +1,14 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
+
+// Module-level singleton to avoid hitting browser AudioContext limits
+let globalAudioCtx: AudioContext | null = null;
 
 export function useTimerSound() {
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
   const getCtx = useCallback(() => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext();
+    if (!globalAudioCtx) {
+      globalAudioCtx = new AudioContext();
     }
-    return audioCtxRef.current;
+    return globalAudioCtx;
   }, []);
 
   const playTone = useCallback(

@@ -11,7 +11,8 @@ import { Clock, CheckCircle, Zap, Flame, Coffee } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks } from "date-fns";
 
 export default function StatsPage() {
-  const now = new Date();
+  // Memoize 'now' so it doesn't bust useMemo caches on every render
+  const now = useMemo(() => new Date(), []);
 
   // Today's range
   const todayStart = startOfDay(now).getTime();

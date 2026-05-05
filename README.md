@@ -1,6 +1,6 @@
 # FokusMode
 
-FokusMode is a premium, high-performance focus and productivity dashboard designed to help you master your time. Built with **React 19**, **Convex**, and **Tailwind CSS 4**, it combines aesthetic glassmorphism with robust session tracking to provide a professional deep-work environment.
+FokusMode is a productivity dashboard designed to help you master your time. Built with **React 19**, **Convex**, and **Tailwind CSS 4**, it combines aesthetic glassmorphism with robust session tracking to provide a professional deep-work environment.
 
 <img width="3556" height="2092" alt="fokusmode-web-homepage" src="https://github.com/user-attachments/assets/0fb60a2e-807a-44aa-9fd3-38d486f32796" />
 

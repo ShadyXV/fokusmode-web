@@ -12,7 +12,6 @@ import {
 } from "@/lib/calendarHelpers";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import CustomEvent from "@/components/calendar/CustomEvent";
-import SessionDetailPopover from "@/components/calendar/SessionDetailPopover";
 
 
 const localizer = dateFnsLocalizer({
@@ -119,21 +118,6 @@ export default function CalendarPage() {
     }
   }, []);
 
-  // Wrap events in popover
-  const EventWrapper = useCallback(
-    ({ event, children }: { event: CalendarEvent; children: React.ReactNode }) => {
-      if (event.isMonthSummary) {
-        return <div className="cursor-pointer h-full relative z-10">{children}</div>;
-      }
-      return (
-        <SessionDetailPopover event={event}>
-          <div className="cursor-pointer">{children}</div>
-        </SessionDetailPopover>
-      );
-    },
-    []
-  );
-
   return (
     <div className="p-4 md:p-6 flex flex-col h-[calc(100vh-3rem)] md:h-screen max-w-7xl mx-auto">
       <div className="mb-4">
@@ -158,7 +142,6 @@ export default function CalendarPage() {
           components={{
             toolbar: CustomToolbar,
             event: CustomEvent,
-            eventWrapper: EventWrapper as never,
           }}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleSelectEvent}

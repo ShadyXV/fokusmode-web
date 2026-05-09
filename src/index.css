@@ -213,6 +213,18 @@
   transform: scale(1.02);
 }
 
+/* Neutralize default rbc-event styles for month summaries */
+.rbc-month-view .rbc-event {
+  background-color: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  height: 100%;
+}
+
+.rbc-month-view .rbc-event:hover {
+  transform: none !important;
+}
+
 .rbc-today {
   background: hsl(var(--accent) / 0.15) !important;
 }

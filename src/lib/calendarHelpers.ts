@@ -30,8 +30,12 @@ export interface CalendarEvent extends Event {
   isBreak?: boolean;
   // Month view summary properties
   isMonthSummary?: boolean;
-  mostRecent?: CalendarEvent;
-  others?: CalendarEvent[];
+  segments?: {
+    morning: CalendarEvent[];
+    afternoon: CalendarEvent[];
+    evening: CalendarEvent[];
+  };
+  totalSessions?: number;
 }
 
 export interface BreakDoc {

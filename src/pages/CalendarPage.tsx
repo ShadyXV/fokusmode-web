@@ -83,10 +83,25 @@ export default function CalendarPage() {
 
       const monthEvents: CalendarEvent[] = [];
       eventsByDay.forEach((dayEvents, dayKey) => {
-        // sort descending by start time (most recent first)
-        dayEvents.sort((a, b) => b.start.getTime() - a.start.getTime());
-        const mostRecent = dayEvents[0];
-        const others = dayEvents.slice(1);
+        // sort ascending by start time for consistent left-to-right/top-to-bottom layout
+        dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
+        
+        const segments = {
+          morning: [] as CalendarEvent[],
+          afternoon: [] as CalendarEvent[],
+          evening: [] as CalendarEvent[],
+        };
+
+        dayEvents.forEach(e => {
+          const hour = e.start.getHours();
+          if (hour >= 5 && hour < 12) {
+            segments.morning.push(e);
+          } else if (hour >= 12 && hour < 18) {
+            segments.afternoon.push(e);
+          } else {
+            segments.evening.push(e);
+          }
+        });
 
         monthEvents.push({
           id: `summary-${dayKey}`,
@@ -100,8 +115,8 @@ export default function CalendarPage() {
           plannedDuration: 0,
           actualDuration: 0,
           isMonthSummary: true,
-          mostRecent,
-          others,
+          segments,
+          totalSessions: dayEvents.length,
         });
       });
       lastEvents.current = monthEvents;

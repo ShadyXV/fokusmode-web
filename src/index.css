@@ -249,14 +249,7 @@
 }
 
 .rbc-date-cell {
-  padding: 4px 8px;
-  text-align: right;
-}
-
-.rbc-date-cell > a {
-  color: hsl(var(--foreground));
-  font-weight: 500;
-  font-size: 13px;
+  padding: 0 !important; /* Reset padding to let our component handle it */
 }
 
 .rbc-toolbar {

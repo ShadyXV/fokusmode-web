@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Calendar as BigCalendar, dateFnsLocalizer, type View } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
+import { format, parse, startOfWeek, getDay, isToday } from "date-fns";
 import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/lib/calendarHelpers";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
 import CustomEvent from "@/components/calendar/CustomEvent";
+import { cn } from "@/lib/utils";
 
 
 const localizer = dateFnsLocalizer({
@@ -25,6 +26,25 @@ const localizer = dateFnsLocalizer({
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
+
+  // Custom component for the date number in Month view
+  const DateHeader = ({ label, date }: { label: string; date: Date }) => {
+    const today = isToday(date);
+    
+    return (
+      <div className="rbc-button-link py-1 px-2 text-right">
+        <span 
+          className={cn(
+            "inline-flex items-center justify-center w-7 h-7 text-sm font-medium transition-colors",
+            today && "bg-primary text-primary-foreground rounded-full",
+            !today && "hover:bg-accent hover:text-accent-foreground rounded-md"
+          )}
+        >
+          {label}
+        </span>
+      </div>
+    );
+  };
 
   // Always fetch a 3-month buffer (prev, current, next month)
   // This ensures switching views (Month/Week/Day) is instantaneous
@@ -142,6 +162,9 @@ export default function CalendarPage() {
           components={{
             toolbar: CustomToolbar,
             event: CustomEvent,
+            month: {
+              dateHeader: DateHeader,
+            },
           }}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleSelectEvent}

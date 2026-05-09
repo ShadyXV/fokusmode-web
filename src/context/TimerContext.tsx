@@ -29,6 +29,7 @@ const TimerContext = createContext<TimerContextValue | null>(null);
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const defaultTag = useQuery(api.tags.getDefault);
+  const tags = useQuery(api.tags.list);
   const createSession = useMutation(api.sessions.create);
   const createBreak = useMutation(api.breaks.create);
 
@@ -205,8 +206,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (timer.isRunning) {
       const timeStr = formatTime(timer.timeRemaining);
-      const modeStr = sessionMode === "focus" ? "Focus" : "Break";
-      const newTitle = `${timeStr} ${modeStr} - FokusMode`;
+      let newTitle;
+      
+      if (sessionMode === "focus") {
+        const selectedTag = tags?.find(t => t._id === (selectedTagId || defaultTag?._id));
+        const tagName = selectedTag?.name || "Focus";
+        newTitle = `${timeStr} ${tagName} - FokusMode`;
+      } else {
+        newTitle = `${timeStr} Break - FokusMode`;
+      }
+
       if (document.title !== newTitle) {
         document.title = newTitle;
       }
@@ -215,7 +224,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         document.title = "FokusMode";
       }
     }
-  }, [timer.isRunning, timer.timeRemaining, sessionMode]);
+  }, [timer.isRunning, timer.timeRemaining, sessionMode, selectedTagId, tags, defaultTag]);
 
   // Force refresh on visibility change
   useEffect(() => {

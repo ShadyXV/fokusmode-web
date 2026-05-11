@@ -124,10 +124,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
               window.focus();
             };
           }
+
+          const isLongFocus = sessionMode === "focus" && result.actualDuration > 25 * 60;
+          const recommendedBreak = result.actualDuration > 60 * 60 ? 15 * 60 : 5 * 60;
+
           toast.success(sessionMode === "break" ? "Break ended!" : "Session completed!", {
             description: sessionMode === "break"
               ? `${formatTime(result.actualDuration)} break logged.`
               : `${formatTime(result.actualDuration)} of focused work logged.`,
+            action: isLongFocus ? {
+              label: `Take ${recommendedBreak / 60}m break`,
+              onClick: () => {
+                setSessionMode("break");
+                startTimer(recommendedBreak, "break");
+              }
+            } : undefined,
+            duration: isLongFocus ? 10000 : 4000,
           });
         } else {
           playInterrupt();

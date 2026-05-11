@@ -74,8 +74,10 @@ export default function CalendarPage() {
     const allEvents = [...sessionEvents, ...breakEvents];
     
     if (view === "month") {
+      // Exclude breaks from the month view summary
+      const filteredEvents = allEvents.filter(e => !e.isBreak);
       const eventsByDay = new Map<string, CalendarEvent[]>();
-      for (const e of allEvents) {
+      for (const e of filteredEvents) {
         const dayKey = format(e.start, "yyyy-MM-dd");
         if (!eventsByDay.has(dayKey)) eventsByDay.set(dayKey, []);
         eventsByDay.get(dayKey)!.push(e);

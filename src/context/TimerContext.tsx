@@ -115,11 +115,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         if (result.completed) {
           playComplete();
           if (Notification.permission === "granted") {
-            new Notification("FokusMode", {
+            const notification = new Notification("FokusMode", {
               body: sessionMode === "break" 
                 ? `Break over! Time to focus.`
                 : `Session completed! ${formatTime(result.actualDuration)} focused.`,
             });
+            notification.onclick = () => {
+              window.focus();
+            };
           }
           toast.success(sessionMode === "break" ? "Break ended!" : "Session completed!", {
             description: sessionMode === "break"

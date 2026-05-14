@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -33,6 +34,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const createSession = useMutation(api.sessions.create);
   const createBreak = useMutation(api.breaks.create);
 
+  const navigate = useNavigate();
   const timer = useTimer();
   const { playComplete, playInterrupt } = useTimerSound();
 
@@ -128,17 +130,25 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const isLongFocus = sessionMode === "focus" && result.actualDuration > 25 * 60;
           const recommendedBreak = result.actualDuration > 60 * 60 ? 15 * 60 : 5 * 60;
 
-          toast.success(sessionMode === "break" ? "Break ended!" : "Session completed!", {
+          const toastId = toast.success(sessionMode === "break" ? "Break ended!" : "Session completed!", {
             description: sessionMode === "break"
               ? `${formatTime(result.actualDuration)} break logged.`
               : `${formatTime(result.actualDuration)} of focused work logged.`,
             action: isLongFocus ? {
               label: `Take ${recommendedBreak / 60}m break`,
               onClick: () => {
+                if (timer.isRunning) return;
                 setSessionMode("break");
                 startTimer(recommendedBreak, "break");
+                navigate("/");
+                toast.dismiss(toastId);
+                toast.success(`${recommendedBreak / 60}m break started!`, {
+                  description: "Timer is running. Relax and recharge.",
+                  duration: 3000,
+                });
               }
             } : undefined,
+            cancel: { label: "Dismiss", onClick: () => {} },
             duration: isLongFocus ? 10000 : 4000,
           });
         } else {
@@ -164,11 +174,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(STORAGE_KEYS.TAG_ID);
 
         timer.reset();
+        if (sessionMode === "break") {
+          setSessionMode("focus");
+        }
       } catch {
         toast.error("Failed to save session");
       }
     },
-    [timer, selectedTagId, defaultTag, createSession, createBreak, playComplete, playInterrupt, sessionMode]
+    [timer, selectedTagId, defaultTag, createSession, createBreak, playComplete, playInterrupt, sessionMode, navigate]
   );
 
   // Restore session on mount

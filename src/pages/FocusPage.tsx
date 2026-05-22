@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useTimerContext } from "@/context/TimerContext";
 import { useTimerSound } from "@/hooks/useTimerSound";
+import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -32,13 +33,6 @@ const BREAK_PRESETS = [
   { label: "30m", seconds: 30 * 60 },
 ];
 
-function formatTime(seconds: number): string {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-}
 
 export default function FocusPage() {
   const tags = useQuery(api.tags.list);

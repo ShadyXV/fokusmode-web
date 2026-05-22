@@ -1,6 +1,4 @@
-import { useMemo } from "react";
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useSessionStats } from "@/hooks/useSessionStats";
 import { formatDuration } from "@/lib/calendarHelpers";
 import SummaryCard from "@/components/stats/SummaryCard";
 import DailyChart from "@/components/stats/DailyChart";
@@ -8,92 +6,19 @@ import WeeklyComparison from "@/components/stats/WeeklyComparison";
 import TagBreakdown from "@/components/stats/TagBreakdown";
 import SessionHistory from "@/components/stats/SessionHistory";
 import { Clock, CheckCircle, Zap, Flame, Coffee } from "lucide-react";
-import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks } from "date-fns";
 
 export default function StatsPage() {
-  // Memoize 'now' so it doesn't bust useMemo caches on every render
-  const now = useMemo(() => new Date(), []);
-
-  // Today's range
-  const todayStart = startOfDay(now).getTime();
-  const todayEnd = endOfDay(now).getTime();
-
-  // This week range
-  const thisWeekStart = startOfWeek(now, { weekStartsOn: 0 }).getTime();
-  const thisWeekEnd = endOfWeek(now, { weekStartsOn: 0 }).getTime();
-
-  // Last week range
-  const lastWeekDate = subWeeks(now, 1);
-  const lastWeekStart = startOfWeek(lastWeekDate, { weekStartsOn: 0 }).getTime();
-  const lastWeekEnd = endOfWeek(lastWeekDate, { weekStartsOn: 0 }).getTime();
-
-  // Last 7 days for chart
-  const sevenDaysAgo = subDays(startOfDay(now), 6).getTime();
-
-  // Last 30 days for overall stats
-  const thirtyDaysAgo = subDays(startOfDay(now), 29).getTime();
-
-  const todayStats = useQuery(api.sessions.getStats, { start: todayStart, end: todayEnd });
-  const todayBreaks = useQuery(api.breaks.getStats, { start: todayStart, end: todayEnd });
-  const thisWeekStats = useQuery(api.sessions.getStats, { start: thisWeekStart, end: thisWeekEnd });
-  const lastWeekStats = useQuery(api.sessions.getStats, { start: lastWeekStart, end: lastWeekEnd });
-  const dailyBreakdown = useQuery(api.sessions.getDailyBreakdown, { start: sevenDaysAgo, end: todayEnd });
-  const recentSessions = useQuery(api.sessions.listByDateRange, { start: thirtyDaysAgo, end: todayEnd });
-  const tags = useQuery(api.tags.list);
-
-  // Calculate streak
-  const streak = useMemo(() => {
-    if (!recentSessions) return 0;
-    let count = 0;
-    const today = startOfDay(now);
-    for (let i = 0; i < 365; i++) {
-      const checkDate = subDays(today, i);
-      const dateStr = format(checkDate, "yyyy-MM-dd");
-      const hasSessions = recentSessions.some((s) => {
-        const sessionDate = format(new Date(s.startedAt), "yyyy-MM-dd");
-        return sessionDate === dateStr;
-      });
-      if (hasSessions) {
-        count++;
-      } else if (i > 0) {
-        break;
-      }
-    }
-    return count;
-  }, [recentSessions, now]);
-
-  // Daily chart data
-  const chartData = useMemo(() => {
-    const days: { date: string; minutes: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = subDays(now, i);
-      const dateStr = format(d, "yyyy-MM-dd");
-      const dayLabel = format(d, "EEE");
-      const dayData = dailyBreakdown?.[dateStr];
-      days.push({
-        date: dayLabel,
-        minutes: dayData ? Math.round(dayData.duration / 60) : 0,
-      });
-    }
-    return days;
-  }, [dailyBreakdown, now]);
-
-  // Tag breakdown data
-  const tagBreakdownData = useMemo(() => {
-    if (!recentSessions || !tags) return [];
-    const tagDurations: Record<string, number> = {};
-    for (const s of recentSessions) {
-      tagDurations[s.tagId] = (tagDurations[s.tagId] || 0) + s.actualDuration;
-    }
-    return tags
-      .filter((t) => tagDurations[t._id])
-      .map((t) => ({
-        name: t.name,
-        color: t.color,
-        duration: tagDurations[t._id] || 0,
-      }))
-      .sort((a, b) => b.duration - a.duration);
-  }, [recentSessions, tags]);
+  const {
+    todayStats,
+    todayBreaks,
+    thisWeekStats,
+    lastWeekStats,
+    recentSessions,
+    tags,
+    streak,
+    chartData,
+    tagBreakdownData,
+  } = useSessionStats();
 
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-6xl">

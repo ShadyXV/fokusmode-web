@@ -14,6 +14,7 @@ export function useTimer() {
   const [elapsed, setElapsed] = useState(0);
   const startTimeRef = useRef<number>(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onCompleteRef = useRef<(() => void) | null>(null);
 
   const timeRemaining = Math.max(0, plannedDuration - elapsed);
   const progress = plannedDuration > 0 ? Math.min(1, elapsed / plannedDuration) : 0;
@@ -21,15 +22,17 @@ export function useTimer() {
   const tick = useCallback(() => {
     const now = Date.now();
     const newElapsed = (now - startTimeRef.current) / 1000;
-    
+
     if (newElapsed >= plannedDuration) {
-      // Timer completed naturally
       setIsRunning(false);
       setElapsed(plannedDuration);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      const cb = onCompleteRef.current;
+      onCompleteRef.current = null;
+      cb?.();
       return;
     }
 
@@ -50,7 +53,8 @@ export function useTimer() {
     };
   }, [isRunning, tick]);
 
-  const start = useCallback((durationSeconds: number, resumeStartTime?: number) => {
+  const start = useCallback((durationSeconds: number, resumeStartTime?: number, onComplete?: () => void) => {
+    onCompleteRef.current = onComplete ?? null;
     setPlannedDuration(durationSeconds);
     if (resumeStartTime) {
       startTimeRef.current = resumeStartTime;

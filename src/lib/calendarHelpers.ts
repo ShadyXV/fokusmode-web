@@ -1,4 +1,5 @@
 import type { Event } from "react-big-calendar";
+import { format } from "date-fns";
 
 interface SessionDoc {
   _id: string;
@@ -134,6 +135,53 @@ export function getDateRangeForView(
       return { start: start.getTime(), end: end.getTime() };
     }
   }
+}
+
+export function buildMonthSummaries(events: CalendarEvent[]): CalendarEvent[] {
+  const focusEvents = events.filter((e) => !e.isBreak);
+  const eventsByDay = new Map<string, CalendarEvent[]>();
+
+  for (const e of focusEvents) {
+    const dayKey = format(e.start, "yyyy-MM-dd");
+    if (!eventsByDay.has(dayKey)) eventsByDay.set(dayKey, []);
+    eventsByDay.get(dayKey)!.push(e);
+  }
+
+  const summaries: CalendarEvent[] = [];
+  eventsByDay.forEach((dayEvents, dayKey) => {
+    dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    const segments = {
+      morning: [] as CalendarEvent[],
+      afternoon: [] as CalendarEvent[],
+      evening: [] as CalendarEvent[],
+    };
+
+    for (const e of dayEvents) {
+      const hour = e.start.getHours();
+      if (hour >= 5 && hour < 12) segments.morning.push(e);
+      else if (hour >= 12 && hour < 18) segments.afternoon.push(e);
+      else segments.evening.push(e);
+    }
+
+    summaries.push({
+      id: `summary-${dayKey}`,
+      title: "Summary",
+      start: new Date(`${dayKey}T00:00:00`),
+      end: new Date(`${dayKey}T23:59:59`),
+      allDay: true,
+      tagColor: "transparent",
+      tagName: "Summary",
+      status: "completed",
+      plannedDuration: 0,
+      actualDuration: 0,
+      isMonthSummary: true,
+      segments,
+      totalSessions: dayEvents.length,
+    });
+  });
+
+  return summaries;
 }
 
 export function formatDuration(seconds: number): string {

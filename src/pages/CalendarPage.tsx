@@ -8,6 +8,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import {
   sessionsToEvents,
   breaksToEvents,
+  buildMonthSummaries,
   type CalendarEvent,
 } from "@/lib/calendarHelpers";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -64,69 +65,15 @@ export default function CalendarPage() {
 
   const events = useMemo(() => {
     if (!sessions || !breaks || !tags) return lastEvents.current;
-    
-    const sessionEvents = sessionsToEvents(
-      sessions as any[],
-      tags as any[]
-    );
-    const breakEvents = breaksToEvents(breaks as any[]);
-    
-    const allEvents = [...sessionEvents, ...breakEvents];
-    
-    if (view === "month") {
-      // Exclude breaks from the month view summary
-      const filteredEvents = allEvents.filter(e => !e.isBreak);
-      const eventsByDay = new Map<string, CalendarEvent[]>();
-      for (const e of filteredEvents) {
-        const dayKey = format(e.start, "yyyy-MM-dd");
-        if (!eventsByDay.has(dayKey)) eventsByDay.set(dayKey, []);
-        eventsByDay.get(dayKey)!.push(e);
-      }
 
-      const monthEvents: CalendarEvent[] = [];
-      eventsByDay.forEach((dayEvents, dayKey) => {
-        // sort ascending by start time for consistent left-to-right/top-to-bottom layout
-        dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
-        
-        const segments = {
-          morning: [] as CalendarEvent[],
-          afternoon: [] as CalendarEvent[],
-          evening: [] as CalendarEvent[],
-        };
+    const allEvents = [
+      ...sessionsToEvents(sessions as any[], tags as any[]),
+      ...breaksToEvents(breaks as any[]),
+    ];
 
-        dayEvents.forEach(e => {
-          const hour = e.start.getHours();
-          if (hour >= 5 && hour < 12) {
-            segments.morning.push(e);
-          } else if (hour >= 12 && hour < 18) {
-            segments.afternoon.push(e);
-          } else {
-            segments.evening.push(e);
-          }
-        });
-
-        monthEvents.push({
-          id: `summary-${dayKey}`,
-          title: "Summary",
-          start: new Date(`${dayKey}T00:00:00`),
-          end: new Date(`${dayKey}T23:59:59`),
-          allDay: true,
-          tagColor: "transparent",
-          tagName: "Summary",
-          status: "completed",
-          plannedDuration: 0,
-          actualDuration: 0,
-          isMonthSummary: true,
-          segments,
-          totalSessions: dayEvents.length,
-        });
-      });
-      lastEvents.current = monthEvents;
-      return monthEvents;
-    }
-
-    lastEvents.current = allEvents;
-    return allEvents;
+    const result = view === "month" ? buildMonthSummaries(allEvents) : allEvents;
+    lastEvents.current = result;
+    return result;
   }, [sessions, breaks, tags, view]);
 
   const scrollToTime = useMemo(() => {

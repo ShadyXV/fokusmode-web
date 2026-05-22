@@ -78,8 +78,15 @@ All routes share `AppLayout` (sidebar + `<Outlet>`).
 
 ### Domain concepts (`CONTEXT.md`)
 
-The **monthly calendar view** segments each day into Morning (05:00–11:59), Afternoon (12:00–17:59), and Evening (18:00–04:59). Sessions are rendered with **Smart Placement** logic: each segment gets a 2-row budget, columns are added as density increases (up to 3 cols + overflow), and the total 6-row budget is split equally among active segments. This logic lives in `src/components/calendar/`.
+The **monthly calendar view** segments each day into Morning (05:00–11:59), Afternoon (12:00–17:59), and Evening (18:00–04:59). Sessions are rendered with **Smart Placement** logic: each segment gets a 2-row budget, columns are added as density increases (up to 3 cols + overflow), and the total 6-row budget is split equally among active segments. This logic lives in `src/lib/calendarHelpers.ts`; calendar UI components are in `src/components/calendar/`.
+
+### Other hooks
+
+- `useTimerSound` (`src/hooks/useTimerSound.ts`) — plays completion/interrupt audio; called from `TimerProvider`
+- `usePerformance` (`src/hooks/usePerformance.ts`) — perf monitoring utilities
+
+`src/components/debug/DebugMonitor.tsx` is a development debug overlay.
 
 ### Styling
 
-Tailwind CSS v4 via `@tailwindcss/vite` plugin (no `tailwind.config.js` — config is in CSS). Path alias `@` maps to `src/`. Shadcn UI components live in `src/components/ui/`. `components.json` configures the Shadcn CLI.
+Tailwind CSS v4 via `@tailwindcss/vite` plugin (no `tailwind.config.js` — config is in `src/index.css` under `@theme`). Path alias `@` maps to `src/`. Shadcn UI components live in `src/components/ui/`. `components.json` configures the Shadcn CLI. CSS variables use HSL tuples (no `hsl()` wrapper in the variable, added at reference site).

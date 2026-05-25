@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, cloneElement, isValidElement, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Calendar as BigCalendar, dateFnsLocalizer, type View } from "react-big-calendar";
+import { Calendar as BigCalendar, dateFnsLocalizer, type View, type EventWrapperProps } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay, isToday } from "date-fns";
 import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -10,6 +10,7 @@ import {
   breaksToEvents,
   buildMonthSummaries,
   get3MonthBufferRange,
+  resolveEventOverlaps,
   type CalendarEvent,
 } from "@/lib/calendarHelpers";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -48,6 +49,15 @@ export default function CalendarPage() {
     );
   };
 
+  // Custom component for the column headers (Day/Week views) to prevent touching bottom border
+  const CustomHeader = ({ label }: { label: string }) => {
+    return (
+      <div className="flex flex-col items-center justify-center pb-3 pt-2 text-center text-[11px] font-semibold tracking-wider text-muted-foreground uppercase w-full">
+        <span>{label}</span>
+      </div>
+    );
+  };
+
   // Always fetch a 3-month buffer (prev, current, next month)
   // This ensures switching views (Month/Week/Day) is instantaneous
   const bufferedRange = useMemo(() => {
@@ -69,10 +79,49 @@ export default function CalendarPage() {
       ...breaksToEvents(breaks as any[]),
     ];
 
-    const result = view === "month" ? buildMonthSummaries(allEvents) : allEvents;
-    lastEvents.current = result;
-    return result;
+    const resolvedEvents = resolveEventOverlaps(allEvents);
+
+    return view === "month" ? buildMonthSummaries(resolvedEvents) : resolvedEvents;
   }, [sessions, breaks, tags, view]);
+
+  // Update lastEvents.current inside useEffect to avoid updating ref during render
+  useEffect(() => {
+    if (sessions && breaks && tags) {
+      lastEvents.current = events;
+    }
+  }, [events, sessions, breaks, tags]);
+
+  // Custom slot group style getter to force the slot group height (1 hour = 360px)
+  const slotGroupPropGetter = useCallback(() => {
+    return {
+      style: {
+        minHeight: "360px", // Each 1-hour slot group is exactly 360px high
+      },
+    };
+  }, []);
+
+  // Custom slot style getter to increase vertical space by 100% + another 200% (360px per hour total)
+  const slotPropGetter = useCallback(() => {
+    return {
+      style: {
+        minHeight: "180px", // Each 30-min slot is 180px high, making 1 hour exactly 360px high
+      },
+    };
+  }, []);
+
+  const CustomEventWrapper = useCallback(({ children }: EventWrapperProps<CalendarEvent> & { children?: React.ReactNode }) => {
+    if (view === "month" || !isValidElement(children)) return <>{children}</>;
+
+    const props = children.props as { style?: React.CSSProperties };
+    const childStyle = props.style || {};
+    return cloneElement(children as React.ReactElement<{ style?: React.CSSProperties }>, {
+      style: {
+        ...childStyle,
+        left: "0%",
+        width: "100%",
+      },
+    });
+  }, [view]);
 
   const scrollToTime = useMemo(() => {
     const now = new Date();
@@ -89,9 +138,10 @@ export default function CalendarPage() {
         color: "#fff",
         padding: "1px 4px",
         fontSize: "12px",
+        width: view === "month" ? undefined : "100%",
       },
     };
-  }, []);
+  }, [view]);
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
     if (event.isMonthSummary) {
@@ -122,13 +172,23 @@ export default function CalendarPage() {
           view={view as View}
           onView={(v: View) => setView(v)}
           views={["month", "week", "day"]}
+          dayLayoutAlgorithm="no-overlap"
           components={{
             toolbar: CustomToolbar,
             event: CustomEvent,
+            eventWrapper: CustomEventWrapper,
+            week: {
+              header: CustomHeader,
+            },
+            day: {
+              header: CustomHeader,
+            },
             month: {
               dateHeader: DateHeader,
             },
           }}
+          slotGroupPropGetter={slotGroupPropGetter}
+          slotPropGetter={slotPropGetter}
           eventPropGetter={eventStyleGetter}
           onSelectEvent={handleSelectEvent}
           scrollToTime={scrollToTime}

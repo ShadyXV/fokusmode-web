@@ -165,6 +165,38 @@ export function getDateRangeForView(
   }
 }
 
+export function resolveEventOverlaps(events: CalendarEvent[]): CalendarEvent[] {
+  // Shallow copy events to avoid mutating source query data
+  const copied = events.map(e => ({ ...e }));
+
+  // Sort by start time (earliest first), then by end time descending
+  copied.sort((a, b) => {
+    const diff = a.start.getTime() - b.start.getTime();
+    if (diff !== 0) return diff;
+    return b.end.getTime() - a.end.getTime();
+  });
+
+  for (let i = 0; i < copied.length - 1; i++) {
+    const curr = copied[i];
+    const next = copied[i + 1];
+
+    const currStart = curr.start.getTime();
+    const currEnd = curr.end.getTime();
+    const nextStart = next.start.getTime();
+
+    // If next event starts before current event ends visually, we have an overlap
+    if (currEnd > nextStart) {
+      // Safely truncate preceding event's end time to match succeeding event's start time with a microscopic 1-second gap.
+      // This prevents React Big Calendar from treating them as overlapping columns.
+      if (nextStart > currStart) {
+        curr.end = new Date(nextStart - 1000);
+      }
+    }
+  }
+
+  return copied;
+}
+
 export function buildMonthSummaries(events: CalendarEvent[]): CalendarEvent[] {
   const focusEvents = events.filter((e) => !e.isBreak);
   const eventsByDay = new Map<string, CalendarEvent[]>();

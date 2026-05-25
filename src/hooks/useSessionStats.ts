@@ -1,19 +1,22 @@
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, subWeeks } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
+import { getStatsTimeRanges } from "@/lib/calendarHelpers";
 
 export function useSessionStats() {
   const now = useMemo(() => new Date(), []);
 
-  const todayStart = startOfDay(now).getTime();
-  const todayEnd = endOfDay(now).getTime();
-  const thisWeekStart = startOfWeek(now, { weekStartsOn: 0 }).getTime();
-  const thisWeekEnd = endOfWeek(now, { weekStartsOn: 0 }).getTime();
-  const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }).getTime();
-  const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }).getTime();
-  const sevenDaysAgo = subDays(startOfDay(now), 6).getTime();
-  const thirtyDaysAgo = subDays(startOfDay(now), 29).getTime();
+  const {
+    todayStart,
+    todayEnd,
+    thisWeekStart,
+    thisWeekEnd,
+    lastWeekStart,
+    lastWeekEnd,
+    sevenDaysAgo,
+    thirtyDaysAgo,
+  } = useMemo(() => getStatsTimeRanges(now), [now]);
 
   const todayStats = useQuery(api.sessions.getStats, { start: todayStart, end: todayEnd });
   const todayBreaks = useQuery(api.breaks.getStats, { start: todayStart, end: todayEnd });

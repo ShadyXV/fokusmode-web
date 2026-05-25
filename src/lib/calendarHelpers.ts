@@ -1,5 +1,27 @@
 import type { Event } from "react-big-calendar";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, subDays, subWeeks } from "date-fns";
+
+export function getStatsTimeRanges(date: Date) {
+  const todayStart = startOfDay(date).getTime();
+  const todayEnd = endOfDay(date).getTime();
+  const thisWeekStart = startOfWeek(date, { weekStartsOn: 0 }).getTime();
+  const thisWeekEnd = endOfWeek(date, { weekStartsOn: 0 }).getTime();
+  const lastWeekStart = startOfWeek(subWeeks(date, 1), { weekStartsOn: 0 }).getTime();
+  const lastWeekEnd = endOfWeek(subWeeks(date, 1), { weekStartsOn: 0 }).getTime();
+  const sevenDaysAgo = subDays(startOfDay(date), 6).getTime();
+  const thirtyDaysAgo = subDays(startOfDay(date), 29).getTime();
+
+  return {
+    todayStart,
+    todayEnd,
+    thisWeekStart,
+    thisWeekEnd,
+    lastWeekStart,
+    lastWeekEnd,
+    sevenDaysAgo,
+    thirtyDaysAgo,
+  };
+}
 
 interface SessionDoc {
   _id: string;

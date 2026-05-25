@@ -195,29 +195,29 @@ export default function DistractionsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="h-16 w-16"
+              className="h-9 w-9 rounded-lg border-white/5 bg-background/50 hover:bg-violet-600 hover:text-white transition-all duration-200"
               onClick={() => setViewDate(subDays(viewDate, 1))}
             >
-              <ChevronLeft className="w-16 h-16" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-sm font-bold min-w-[150px] text-center">
+            <span className="text-sm font-bold min-w-[120px] text-center tracking-tight">
               {isToday ? "Today" : format(viewDate, "EEEE, MMM d")}
             </span>
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="h-16 w-16"
+              className="h-9 w-9 rounded-lg border-white/5 bg-background/50 hover:bg-violet-600 hover:text-white transition-all duration-200"
               onClick={() => setViewDate(addDays(viewDate, 1))}
             >
-              <ChevronRight className="w-16 h-16" />
+              <ChevronRight className="w-4 h-4" />
             </Button>
             {!isToday && (
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full text-xs"
+                className="rounded-lg h-9 px-3 border-white/5 bg-background/50 hover:bg-violet-600 hover:text-white font-semibold transition-all duration-200 text-xs"
                 onClick={() => setViewDate(new Date())}
               >
                 Today

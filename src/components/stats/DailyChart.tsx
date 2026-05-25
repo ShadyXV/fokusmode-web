@@ -28,6 +28,12 @@ export default function DailyChart({ data }: DailyChartProps) {
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} barCategoryGap="20%">
+              <defs>
+                <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                </linearGradient>
+              </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="hsl(var(--border))"
@@ -57,7 +63,7 @@ export default function DailyChart({ data }: DailyChartProps) {
               />
               <Bar
                 dataKey="minutes"
-                fill="hsl(var(--primary))"
+                fill="url(#focusGradient)"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
               />

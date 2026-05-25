@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-25T13:59:56.500Z",
+  "title": "Design System: FokusMode",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Deep Space Neon",
+        "canonical": "#18181b"
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Obsidian Void",
+        "canonical": "#09090b"
+      },
+      "accent": {
+        "role": "accent",
+        "displayName": "Neon Pulse",
+        "canonical": "#8b5cf6"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Inter Variable",
+        "purpose": "Main timer and page headers."
+      }
+    },
+    "motion": [
+      {
+        "name": "fluid-ease",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Fluid, rhythmic transitions for the Midnight Engine."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Neon Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main focus-start action.",
+      "html": "<button class=\"ds-btn-neon\">START FOCUS</button>",
+      "css": ".ds-btn-neon { background: #fafafa; color: #18181b; padding: 10px 24px; border-radius: 10px; font-weight: 600; font-family: Inter, sans-serif; border: none; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; } .ds-btn-neon:hover { background: #f4f4f5; transform: translateY(-1px); box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }"
+    },
+    {
+      "name": "Glass Container",
+      "kind": "card",
+      "description": "The atmospheric surface for tools and stats.",
+      "html": "<div class=\"ds-glass-card\">Midnight Context</div>",
+      "css": ".ds-glass-card { background: rgba(9, 9, 11, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 24px; color: #fafafa; font-family: Inter, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Deep Sea Instrument / Midnight Engine",
+    "overview": "FokusMode is a high-performance productivity instrument. It rejects static environments for an immersive Midnight Engine where design recedes.",
+    "keyCharacteristics": [
+      "Deep Space & Neon palette",
+      "Tonal Drift depth",
+      "Fluid, rhythmic motion"
+    ],
+    "dos": [
+      "Do use .glass utilities",
+      "Do use pulse-glow for active states"
+    ],
+    "donts": [
+      "Don't use heavy black shadows",
+      "Don't use SaaS-cream neutrals"
+    ]
+  }
+}

@@ -167,14 +167,14 @@ export default function FocusPage() {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={timer.isRunning ? (sessionMode === "break" ? "hsl(158, 82%, 46%)" : "hsl(var(--primary))") : "hsl(var(--muted-foreground))"}
+            stroke={timer.isRunning ? (sessionMode === "break" ? "hsl(158, 82%, 46%)" : "#8b5cf6") : "hsl(var(--muted-foreground))"}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
             className="transition-all duration-300 ease-linear"
             style={{
-              filter: timer.isRunning ? (sessionMode === "break" ? "drop-shadow(0 0 8px hsl(158 82% 46% / 0.5))" : "drop-shadow(0 0 8px hsl(var(--primary) / 0.5))") : "none",
+              filter: timer.isRunning ? (sessionMode === "break" ? "drop-shadow(0 0 8px hsl(158 82% 46% / 0.5))" : "drop-shadow(0 0 10px rgba(139, 92, 246, 0.6))") : "none",
             }}
           />
         </svg>
@@ -299,9 +299,9 @@ export default function FocusPage() {
               size="lg"
               onClick={handleStartFocus}
               disabled={selectedDuration <= 0 || (timer.isRunning && sessionMode === "break")}
-              className="rounded-full px-9 h-14 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+              className="rounded-full px-9 h-14 text-base font-bold bg-white text-zinc-950 border-none transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] active:scale-[0.98]"
             >
-              <Play className="w-[30px] h-[30px] mr-2.5" />
+              <Play className="w-[30px] h-[30px] mr-2.5 fill-current" />
               Start Focus
             </Button>
           )}

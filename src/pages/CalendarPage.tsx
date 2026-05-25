@@ -111,9 +111,10 @@ export default function CalendarPage() {
         </p>
       </div>
 
-      <div className="flex-1 relative min-h-[500px]">
+      <div className="flex-1 relative min-h-[500px] overflow-y-auto">
         {/* Optional loading state can go here, but calendar is always visible */}
         <BigCalendar<CalendarEvent>
+          style={{ height: view === "month" ? "125%" : "100%" }}
           localizer={localizer}
           events={events}
           startAccessor="start"

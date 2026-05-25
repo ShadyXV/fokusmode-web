@@ -9,6 +9,7 @@ import {
   sessionsToEvents,
   breaksToEvents,
   buildMonthSummaries,
+  get3MonthBufferRange,
   type CalendarEvent,
 } from "@/lib/calendarHelpers";
 import CustomToolbar from "@/components/calendar/CustomToolbar";
@@ -50,10 +51,7 @@ export default function CalendarPage() {
   // Always fetch a 3-month buffer (prev, current, next month)
   // This ensures switching views (Month/Week/Day) is instantaneous
   const bufferedRange = useMemo(() => {
-    const d = currentDate;
-    const start = new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime();
-    const end = new Date(d.getFullYear(), d.getMonth() + 2, 0, 23, 59, 59, 999).getTime();
-    return { start, end };
+    return get3MonthBufferRange(currentDate);
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   const sessions = useQuery(api.sessions.listByDateRange, bufferedRange);

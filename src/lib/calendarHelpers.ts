@@ -102,6 +102,12 @@ export function breaksToEvents(breaks: BreakDoc[]): CalendarEvent[] {
   });
 }
 
+export function get3MonthBufferRange(date: Date): { start: number; end: number } {
+  const start = new Date(date.getFullYear(), date.getMonth() - 1, 1).getTime();
+  const end = new Date(date.getFullYear(), date.getMonth() + 2, 0, 23, 59, 59, 999).getTime();
+  return { start, end };
+}
+
 export function getDateRangeForView(
   date: Date,
   view: "month" | "week" | "day"

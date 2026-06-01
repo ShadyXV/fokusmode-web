@@ -1,5 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Timer, Calendar, Tag, BarChart3, AlertTriangle } from "lucide-react";
+import {
+  Timer,
+  Calendar,
+  Tag,
+  BarChart3,
+  AlertTriangle,
+  Settings,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -8,6 +15,7 @@ const navItems = [
   { icon: Tag, label: "Tags", href: "/tags" },
   { icon: AlertTriangle, label: "Distractions", href: "/distractions" },
   { icon: BarChart3, label: "Stats", href: "/stats" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
 export default function Sidebar() {

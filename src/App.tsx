@@ -5,6 +5,7 @@ import CalendarPage from "@/pages/CalendarPage";
 import TagsPage from "@/pages/TagsPage";
 import DistractionsPage from "@/pages/DistractionsPage";
 import StatsPage from "@/pages/StatsPage";
+import SettingsPage from "@/pages/SettingsPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/tags" element={<TagsPage />} />
         <Route path="/distractions" element={<DistractionsPage />} />
         <Route path="/stats" element={<StatsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

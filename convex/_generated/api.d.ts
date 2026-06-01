@@ -9,6 +9,7 @@
  */
 
 import type * as breaks from "../breaks.js";
+import type * as dataPortability from "../dataPortability.js";
 import type * as distractionTags from "../distractionTags.js";
 import type * as distractions from "../distractions.js";
 import type * as seed from "../seed.js";
@@ -23,6 +24,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   breaks: typeof breaks;
+  dataPortability: typeof dataPortability;
   distractionTags: typeof distractionTags;
   distractions: typeof distractions;
   seed: typeof seed;

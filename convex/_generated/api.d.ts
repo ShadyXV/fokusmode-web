@@ -8,13 +8,17 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
+import type * as authHelpers from "../authHelpers.js";
 import type * as breaks from "../breaks.js";
 import type * as dataPortability from "../dataPortability.js";
 import type * as distractionTags from "../distractionTags.js";
 import type * as distractions from "../distractions.js";
+import type * as http from "../http.js";
 import type * as seed from "../seed.js";
 import type * as sessions from "../sessions.js";
 import type * as tags from "../tags.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -23,13 +27,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
+  authHelpers: typeof authHelpers;
   breaks: typeof breaks;
   dataPortability: typeof dataPortability;
   distractionTags: typeof distractionTags;
   distractions: typeof distractions;
+  http: typeof http;
   seed: typeof seed;
   sessions: typeof sessions;
   tags: typeof tags;
+  users: typeof users;
 }>;
 
 /**

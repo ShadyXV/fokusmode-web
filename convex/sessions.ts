@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireUserId } from "./authHelpers";
 
 export const create = mutation({
   args: {
@@ -11,13 +12,33 @@ export const create = mutation({
     endedAt: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("sessions", args);
+    const userId = await requireUserId(ctx);
+    const tag = await ctx.db.get(args.tagId);
+    if (!tag || tag.userId !== userId) {
+      throw new Error("Tag not found");
+    }
+
+    return await ctx.db.insert("sessions", {
+      userId,
+      tagId: args.tagId,
+      plannedDuration: args.plannedDuration,
+      actualDuration: args.actualDuration,
+      status: args.status,
+      startedAt: args.startedAt,
+      endedAt: args.endedAt,
+    });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id("sessions") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const session = await ctx.db.get(args.id);
+    if (!session || session.userId !== userId) {
+      throw new Error("Session not found");
+    }
+
     await ctx.db.delete(args.id);
   },
 });
@@ -28,6 +49,17 @@ export const updateTag = mutation({
     tagId: v.id("tags"),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const session = await ctx.db.get(args.id);
+    if (!session || session.userId !== userId) {
+      throw new Error("Session not found");
+    }
+
+    const tag = await ctx.db.get(args.tagId);
+    if (!tag || tag.userId !== userId) {
+      throw new Error("Tag not found");
+    }
+
     return await ctx.db.patch(args.id, { tagId: args.tagId });
   },
 });
@@ -38,10 +70,14 @@ export const listByDateRange = query({
     end: v.number(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     return await ctx.db
       .query("sessions")
-      .withIndex("by_startedAt", (q) =>
-        q.gte("startedAt", args.start).lte("startedAt", args.end)
+      .withIndex("by_userId_and_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .gte("startedAt", args.start)
+          .lte("startedAt", args.end)
       )
       .collect();
   },
@@ -53,10 +89,14 @@ export const getStats = query({
     end: v.number(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_startedAt", (q) =>
-        q.gte("startedAt", args.start).lte("startedAt", args.end)
+      .withIndex("by_userId_and_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .gte("startedAt", args.start)
+          .lte("startedAt", args.end)
       )
       .collect();
 
@@ -79,10 +119,14 @@ export const getDailyBreakdown = query({
     end: v.number(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_startedAt", (q) =>
-        q.gte("startedAt", args.start).lte("startedAt", args.end)
+      .withIndex("by_userId_and_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .gte("startedAt", args.start)
+          .lte("startedAt", args.end)
       )
       .collect();
 

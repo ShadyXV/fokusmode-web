@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireUserId } from "./authHelpers";
 
 export const create = mutation({
   args: {
@@ -10,13 +11,20 @@ export const create = mutation({
     endedAt: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("breaks", args);
+    const userId = await requireUserId(ctx);
+    return await ctx.db.insert("breaks", { userId, ...args });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id("breaks") },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const breakRow = await ctx.db.get(args.id);
+    if (!breakRow || breakRow.userId !== userId) {
+      throw new Error("Break not found");
+    }
+
     await ctx.db.delete(args.id);
   },
 });
@@ -27,10 +35,14 @@ export const listByDateRange = query({
     end: v.number(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     return await ctx.db
       .query("breaks")
-      .withIndex("by_startedAt", (q) =>
-        q.gte("startedAt", args.start).lte("startedAt", args.end)
+      .withIndex("by_userId_and_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .gte("startedAt", args.start)
+          .lte("startedAt", args.end)
       )
       .collect();
   },
@@ -42,10 +54,14 @@ export const getStats = query({
     end: v.number(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const breaks = await ctx.db
       .query("breaks")
-      .withIndex("by_startedAt", (q) =>
-        q.gte("startedAt", args.start).lte("startedAt", args.end)
+      .withIndex("by_userId_and_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .gte("startedAt", args.start)
+          .lte("startedAt", args.end)
       )
       .collect();
 

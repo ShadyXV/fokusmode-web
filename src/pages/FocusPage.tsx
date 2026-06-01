@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useTimerContext } from "@/context/TimerContext";
 import { useTimerSound } from "@/hooks/useTimerSound";
@@ -37,7 +37,6 @@ const BREAK_PRESETS = [
 export default function FocusPage() {
   const tags = useQuery(api.tags.list);
   const defaultTag = useQuery(api.tags.getDefault);
-  const initSeed = useMutation(api.seed.initialize);
 
   const {
     timer,
@@ -60,11 +59,6 @@ export default function FocusPage() {
 
   const dragStartX = useRef(0);
   const dragStartVal = useRef(0);
-
-  // Seed default tag on mount
-  useEffect(() => {
-    initSeed();
-  }, [initSeed]);
 
   // Auto-select most recent tag or default
   useEffect(() => {

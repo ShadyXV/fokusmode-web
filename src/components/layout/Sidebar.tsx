@@ -5,7 +5,7 @@ import {
   Tag,
   BarChart3,
   AlertTriangle,
-  Settings,
+  UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ const navItems = [
   { icon: Tag, label: "Tags", href: "/tags" },
   { icon: AlertTriangle, label: "Distractions", href: "/distractions" },
   { icon: BarChart3, label: "Stats", href: "/stats" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+  { icon: UserRound, label: "User", href: "/user" },
 ];
 
 export default function Sidebar() {

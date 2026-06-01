@@ -1,17 +1,26 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireUserId } from "./authHelpers";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("tags").collect();
+    const userId = await requireUserId(ctx);
+    return await ctx.db
+      .query("tags")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
   },
 });
 
 export const getDefault = query({
   args: {},
   handler: async (ctx) => {
-    const settings = await ctx.db.query("settings").first();
+    const userId = await requireUserId(ctx);
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
     if (!settings) return null;
     return await ctx.db.get(settings.defaultTagId);
   },
@@ -23,7 +32,9 @@ export const create = mutation({
     color: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     return await ctx.db.insert("tags", {
+      userId,
       name: args.name,
       color: args.color,
     });
@@ -37,6 +48,12 @@ export const update = mutation({
     color: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const tag = await ctx.db.get(args.id);
+    if (!tag || tag.userId !== userId) {
+      throw new Error("Tag not found");
+    }
+
     await ctx.db.patch(args.id, {
       name: args.name,
       color: args.color,
@@ -49,7 +66,16 @@ export const remove = mutation({
     id: v.id("tags"),
   },
   handler: async (ctx, args) => {
-    const settings = await ctx.db.query("settings").first();
+    const userId = await requireUserId(ctx);
+    const tag = await ctx.db.get(args.id);
+    if (!tag || tag.userId !== userId) {
+      throw new Error("Tag not found");
+    }
+
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
     if (!settings) throw new Error("Settings not found");
 
     // Prevent deleting the default tag
@@ -60,7 +86,9 @@ export const remove = mutation({
     // Reassign sessions to default tag
     const sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_tagId", (q) => q.eq("tagId", args.id))
+      .withIndex("by_userId_and_tagId", (q) =>
+        q.eq("userId", userId).eq("tagId", args.id)
+      )
       .collect();
 
     for (const session of sessions) {

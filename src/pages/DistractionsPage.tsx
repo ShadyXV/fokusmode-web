@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -37,16 +37,11 @@ const QUICK_PRESETS = [
 export default function DistractionsPage() {
   const distractionTags = useQuery(api.distractionTags.list);
   const removeDistraction = useMutation(api.distractions.remove);
-  const initSeed = useMutation(api.seed.initialize);
 
   const [viewDate, setViewDate] = useState(new Date());
   const [managerOpen, setManagerOpen] = useState(false);
 
   const form = useDistractionForm(distractionTags as any);
-
-  useEffect(() => {
-    initSeed();
-  }, [initSeed]);
 
   const dateRange = useMemo(() => ({
     start: startOfDay(viewDate).getTime(),

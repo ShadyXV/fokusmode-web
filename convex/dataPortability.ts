@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { requireUserId } from "./authHelpers";
 
 const tagExportValidator = v.object({
   id: v.string(),
@@ -69,12 +70,31 @@ const exportDataValidator = v.object({
 export const exportData = query({
   args: {},
   handler: async (ctx) => {
-    const tags = await ctx.db.query("tags").collect();
-    const sessions = await ctx.db.query("sessions").collect();
-    const breaks = await ctx.db.query("breaks").collect();
-    const distractionTags = await ctx.db.query("distractionTags").collect();
-    const distractions = await ctx.db.query("distractions").collect();
-    const settings = await ctx.db.query("settings").collect();
+    const userId = await requireUserId(ctx);
+    const tags = await ctx.db
+      .query("tags")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_userId_and_startedAt", (q) => q.eq("userId", userId))
+      .collect();
+    const breaks = await ctx.db
+      .query("breaks")
+      .withIndex("by_userId_and_startedAt", (q) => q.eq("userId", userId))
+      .collect();
+    const distractionTags = await ctx.db
+      .query("distractionTags")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const distractions = await ctx.db
+      .query("distractions")
+      .withIndex("by_userId_and_createdAt", (q) => q.eq("userId", userId))
+      .collect();
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
 
     return {
       exportFormat: "fokusmode.user-data" as const,
@@ -135,12 +155,14 @@ export const importData = mutation({
     data: exportDataValidator,
   },
   handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
     const tagIdByExportId: Record<string, Id<"tags">> = {};
     const distractionTagIdByExportId: Record<string, Id<"distractionTags">> =
       {};
 
     for (const tag of args.data.data.tags) {
       tagIdByExportId[tag.id] = await ctx.db.insert("tags", {
+        userId,
         name: tag.name,
         color: tag.color,
       });
@@ -150,6 +172,7 @@ export const importData = mutation({
       distractionTagIdByExportId[tag.id] = await ctx.db.insert(
         "distractionTags",
         {
+          userId,
           name: tag.name,
         }
       );
@@ -162,6 +185,7 @@ export const importData = mutation({
       }
 
       await ctx.db.insert("sessions", {
+        userId,
         tagId,
         plannedDuration: session.plannedDuration,
         actualDuration: session.actualDuration,
@@ -173,6 +197,7 @@ export const importData = mutation({
 
     for (const breakRow of args.data.data.breaks) {
       await ctx.db.insert("breaks", {
+        userId,
         plannedDuration: breakRow.plannedDuration,
         actualDuration: breakRow.actualDuration,
         status: breakRow.status,
@@ -191,6 +216,7 @@ export const importData = mutation({
       }
 
       await ctx.db.insert("distractions", {
+        userId,
         distractionTagId,
         description: distraction.description,
         startedAt: distraction.startedAt,
@@ -199,13 +225,20 @@ export const importData = mutation({
       });
     }
 
-    const existingSettings = await ctx.db.query("settings").first();
+    const existingSettings = await ctx.db
+      .query("settings")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
     const importedDefaultTagId = args.data.data.settings[0]?.defaultTagId;
     const defaultTagId =
       importedDefaultTagId ? tagIdByExportId[importedDefaultTagId] : undefined;
 
-    if (!existingSettings && defaultTagId) {
-      await ctx.db.insert("settings", { defaultTagId });
+    if (defaultTagId) {
+      if (existingSettings) {
+        await ctx.db.patch(existingSettings._id, { defaultTagId });
+      } else {
+        await ctx.db.insert("settings", { userId, defaultTagId });
+      }
     }
 
     return {
@@ -214,7 +247,7 @@ export const importData = mutation({
       breaks: args.data.data.breaks.length,
       distractionTags: args.data.data.distractionTags.length,
       distractions: args.data.data.distractions.length,
-      settings: !existingSettings && defaultTagId ? 1 : 0,
+      settings: defaultTagId ? 1 : 0,
     };
   },
 });
